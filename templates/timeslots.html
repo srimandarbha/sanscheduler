@@ -10,6 +10,14 @@
             document.getElementById(`server_${sheet}_${slotIndex}`).disabled = !element.checked;
             document.getElementById(`enddate_${sheet}_${slotIndex}`).disabled = !element.checked;
         }
+        
+        function toggleSelectAll(sheet) {
+            const checkboxes = document.querySelectorAll(`input[type="checkbox"][name="customize_${sheet}"]`);
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = event.target.checked;
+                enableCustomization(checkbox, sheet, checkbox.dataset.index);
+            });
+        }
     </script>
 </head>
 <body>
@@ -34,7 +42,7 @@
                 <th>Scheduled Date</th>
                 <th>SNOW Change</th>
                 <th>Maintenance Name</th>
-                <th>Customize</th>
+                <th>Customize <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
             </tr>
             {% for slot in time_slots %}
             <tr>
@@ -48,7 +56,7 @@
                     <td>{{ slot['SNOW change'] }}</td>
                     <td>{{ slot['maintenance_name'] }}</td>
                     <td>
-                        <input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})">
+                        <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})">
                         <input type="hidden" name="filename" value="{{ filename }}">
                         <input type="hidden" name="sheet_name" value="{{ sheet }}">
                         <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
@@ -60,7 +68,7 @@
         </table>
     {% endfor %}
     <footer class="footer">
-		<p></p>
-	</footer>
+        <p></p>
+    </footer>
 </body>
 </html>

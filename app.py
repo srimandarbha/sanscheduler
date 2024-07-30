@@ -102,12 +102,12 @@ def upload_file():
             df = pd.read_excel(filepath, sheet_name=sheet)
             data[sheet] = df.to_dict('records')
         return render_template('customize.html', data=data, filename=file.filename, sheet_names=sheet_names)
+    flash('Invalid file type', 'danger')
     return redirect(request.url)
 
 @app.route('/customize', methods=['POST'])
 def customize():
     filename = request.form['filename']
-    print(f"filename: {filename}")
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     custom_data = []
     wb = load_workbook(filepath)
@@ -134,21 +134,11 @@ def customize():
             ws.cell(row=i, column=7, value=custom_snow_change)
             ws.cell(row=i, column=8, value=custom_maintenance_name)
         
-        custom_data.append({
-            'sheet': sheet,
-            'custom_servers': custom_servers,
-            'custom_emails': custom_emails,
-            'custom_paths': custom_paths,
-            'custom_arrays': custom_arrays,
-            'custom_storages': custom_storages,
-            'custom_enddates': custom_enddates,
-            'custom_snow_changes': custom_snow_changes,
-            'custom_maintenance_names': custom_maintenance_names
-        })
+        wb.save(filepath)
     
-    wb.save(filepath)
-    
-    return render_template('success.html', custom_data=custom_data)
+    flash('Custom slots saved successfully', 'success')
+    return redirect(url_for('view_timeslots', filename=filename))
+
 
 @app.route('/timeslots')
 def timeslots():
@@ -190,16 +180,18 @@ def update_slot():
     slot_index = int(request.form['slot_index'])
     custom_server = request.form['custom_server']
     custom_enddate = request.form['custom_enddate']
-    
+    print(f"updating_slot with slot_index {slot_index}")
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
     ws = wb[sheet_name]
     
     ws.cell(row=slot_index+2, column=1, value=custom_server)  # Adjust column index if needed
     ws.cell(row=slot_index+2, column=6, value=custom_enddate)  # Adjust column index if needed
-    
+    print(f"saving new maintenance schedule for {custom_server} on {custom_enddate}")
     wb.save(filepath)
-    return redirect(url_for('timeslots', filename=filename))
+    flash('Slot updated successfully', 'success')
+    return redirect(url_for('view_timeslots', filename=filename))
+
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
