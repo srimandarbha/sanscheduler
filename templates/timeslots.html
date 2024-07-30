@@ -15,6 +15,7 @@
 <body>
     <ul class="nav">
         <li><a href="/">Home</a></li>
+        <li><a href="/uploads">Maintenance</a></li>
         <li><a href="/timeslots?filename={{ filename }}">Time Slots</a></li>
     </ul>
     <h1>Time Slots</h1>
@@ -23,7 +24,7 @@
         <input type="submit" value="Send Reminder Emails">
     </form>
     {% for sheet, time_slots in data.items() %}
-        <h2>Sheet: {{ sheet }}</h2>
+        <br>
         <table>
             <tr>
                 <th>Server</th>
@@ -31,7 +32,7 @@
                 <th>Path</th>
                 <th>Array</th>
                 <th>Storage</th>
-                <th>End Date</th>
+                <th>Scheduled Date</th>
                 <th>SNOW Change</th>
                 <th>Maintenance Name</th>
                 <th>Customize</th>

@@ -9,11 +9,18 @@
 <body>
     <ul class="nav">
         <li><a href="/">Home</a></li>
+        <li><a href="/timeslots">TimeSlots</a></li>
     </ul>
     <h1>Upload Excel File for Maintenance Windows</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="start">Start date:</label>
+        <input type="date" id="start" name="trip-start" value="2018-07-22" min="2018-01-01" max="2018-12-31" /><br><br><br>
+        <label for="crs"> Scheduling CR's on weekends?</label>
+        <input type="checkbox" id="plan-weekends" name="plan-weekends" value="yes"><br><br><br> 
         <input type="file" name="file">
-        <input type="submit" value="Upload">
+        <input type="submit" value="Upload"><br>
+        <br>  
+
     </form>
 </body>
 </html>
