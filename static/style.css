@@ -5,12 +5,20 @@ body {
 .nav {
     list-style: none;
     padding: 0;
-}
-
-.nav li {
-    display: inline;
-    margin-right: 10px;
-}
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  
+  .nav a {
+    text-decoration: none;
+    color: #337ab7;
+  }
+  
+  .nav a:hover {
+    color: #23527c;
+  }
 
 table {
     width: 100%;

@@ -10,9 +10,6 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'xls', 'xlsx'}
 app.secret_key = 'supersecretkey'  # Needed for flash messages
-app.config['END_DATE'] = ''
-app.config['PLAN_WEEKENDS'] = ''
-app.config['SERVER_LIMIT'] = ''
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -32,12 +29,18 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return redirect(request.url)
-    app.config['END_DATE'] = request.form.get("start")
-    app.config['PLAN_WEEKENDS'] = request.form.get('plan-weekends', 'no') 
-    app.config['SERVER_LIMIT'] = request.form['server-limit']
+    
     if file and allowed_file(file.filename):
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
+        config_filename=file.filename.split('.')[0]+'.config'
+        if not os.path.exists(config_filename):
+            config_dict={}
+            config_dict['END_DATE']=request.form.get("start")
+            config_dict['PLAN_WEEKENDS']=request.form.get('plan-weekends', 'no')
+            config_dict['SERVER_LIMIT']=request.form['server-limit']
+            with open(config_filename, 'w') as file:
+                file.write(str(config_dict))
         wb = load_workbook(filepath)
         sheet_names = wb.sheetnames
         data = {}
