@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customize Time Slots</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function enableCustomization(checkbox, sheetName, index) {
+            const isChecked = checkbox.checked;
+            document.querySelector(`#server_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#email_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#path_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#array_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#storage_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#enddate_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#snow_change_${sheetName}_${index}`).disabled = !isChecked;
+            document.querySelector(`#maintenance_name_${sheetName}_${index}`).disabled = !isChecked;
+        }
+    </script>
 </head>
 <body>
     <ul class="nav">
@@ -32,14 +45,14 @@
                 {% for slot in time_slots %}
                 <tr>
                     <td><input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})"></td>
-                    <td><input type="text" name="custom_server_{{ sheet }}" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
-                    <td><input type="text" name="custom_email_{{ sheet }}" id="email_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['email'] }}" disabled></td>
-                    <td><input type="text" name="custom_path_{{ sheet }}" id="path_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['path'] }}" disabled></td>
-                    <td><input type="text" name="custom_array_{{ sheet }}" id="array_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['array'] }}" disabled></td>
-                    <td><input type="text" name="custom_storage_{{ sheet }}" id="storage_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['storage'] }}" disabled></td>
-                    <td><input type="text" name="custom_enddate_{{ sheet }}" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
-                    <td><input type="text" name="custom_snow_change_{{ sheet }}" id="snow_change_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['SNOW change'] }}" disabled></td>
-                    <td><input type="text" name="custom_maintenance_name_{{ sheet }}" id="maintenance_name_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['maintenance_name'] }}" disabled></td>
+                    <td><input type="text" name="custom_server_{{ sheet }}[]" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
+                    <td><input type="text" name="custom_email_{{ sheet }}[]" id="email_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['email'] }}" disabled></td>
+                    <td><input type="text" name="custom_path_{{ sheet }}[]" id="path_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['path'] }}" disabled></td>
+                    <td><input type="text" name="custom_array_{{ sheet }}[]" id="array_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['array'] }}" disabled></td>
+                    <td><input type="text" name="custom_storage_{{ sheet }}[]" id="storage_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['storage'] }}" disabled></td>
+                    <td><input type="text" name="custom_enddate_{{ sheet }}[]" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
+                    <td><input type="text" name="custom_snow_change_{{ sheet }}[]" id="snow_change_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['SNOW change'] }}" disabled></td>
+                    <td><input type="text" name="custom_maintenance_name_{{ sheet }}[]" id="maintenance_name_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['maintenance_name'] }}" disabled></td>
                 </tr>
                 {% endfor %}
             </table>
@@ -47,7 +60,7 @@
         <input type="submit" value="Save Custom Slots">
     </form>
     <footer class="footer">
-		<p></p>
-	</footer>
+        <p>© 2024 Your Company</p>
+    </footer>
 </body>
 </html>

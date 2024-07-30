@@ -31,10 +31,8 @@ def schedule_maintenance(data, config):
     current_date = start_date
     while current_date <= end_date:
         if plan_weekends and current_date.weekday() in [5,6]:  # Weekdays are 0-4
-            print(f"weekend:{current_date}")
             schedule_dates.append(current_date)
         elif (not plan_weekends) and current_date.weekday() in [0,1,2,3,4]:
-            print(f"weekday:{current_date}")
             schedule_dates.append(current_date)
         current_date += datetime.timedelta(days=1)
         
@@ -49,58 +47,26 @@ def schedule_maintenance(data, config):
     # Distribute servers across the available dates
     server_count = 0
     for sheet, records in data.items():
+        flat_schedule_dict={}
+        flat_schedule_dict[sheet]=[]
         for record in records:
             date_index = server_count // server_limit
             if date_index >= len(schedule_dates):
                 raise ValueError("Index out of range, more servers than available slots.")
             schedule_date = schedule_dates[date_index]
-            print(schedule_date)
-            record['enddate'] = schedule_date
+            record['enddate'] = schedule_date.strftime('%Y-%m-%d')
             schedule[schedule_date].append(record)
             server_count += 1
+        print(schedule)
 
     # Flatten the schedule for easier processing in the template
     flat_schedule = []
     for date, records in schedule.items():
+        print(date,records)
         for record in records:
             flat_schedule.append(record)
     
     return flat_schedule
-
-
-def schedule_maintenance(data, config_dict):
-    end_date = datetime.datetime.strptime(config_dict['END_DATE'], '%Y-%m-%d')
-    plan_weekends = config_dict['PLAN_WEEKENDS'] == 'yes'
-    server_limit = config_dict['SERVER_LIMIT']
-    
-    # Generate new end dates
-    new_schedule_dict={}
-    
-    for sheet, time_slots in data.items():
-        new_schedule = []
-        for slot in time_slots:
-            slot_end_date = end_date
-            server_count = 0
-            while server_count < len(time_slots):
-                if not plan_weekends and slot_end_date.weekday() in [5, 6]:  # Skip weekends
-                    slot_end_date += datetime.timedelta(days=1)
-                    continue
-                new_schedule.append({
-                    'servers': slot['servers'],
-                    'email': slot['email'],
-                    'path': slot['path'],
-                    'array': slot['array'],
-                    'storage': slot['storage'],
-                    'enddate': slot_end_date.strftime('%Y-%m-%d'),
-                    'SNOW change': slot['SNOW change'],
-                    'maintenance_name': slot['maintenance_name']
-                })
-                server_count += 1
-                if server_count % int(server_limit) == 0:
-                    slot_end_date += datetime.timedelta(days=1)
-            new_schedule_dict[sheet]=new_schedule
-    
-    return new_schedule_dict
 
 @app.route('/')
 def index():
@@ -124,12 +90,11 @@ def upload_file():
         wb = load_workbook(filepath)
         sheet_names = wb.sheetnames
         config_filename=file.filename.split('.')[0]+'.config'
-        if not os.path.exists(config_filename):
-            config_dict={}
-            config_dict["END_DATE"]=request.form.get("start")
-            config_dict["PLAN_WEEKENDS"]=request.form.get("plan-weekends", "no")
-            config_dict["SERVER_LIMIT"]=request.form["server-limit"]
-            with open(config_filename, 'w') as jsonfile:
+        config_dict={}
+        config_dict["END_DATE"]=request.form.get("start")
+        config_dict["PLAN_WEEKENDS"]=request.form.get("plan-weekends", "no")
+        config_dict["SERVER_LIMIT"]=request.form["server-limit"]
+        with open(config_filename, 'w') as jsonfile:
                 json.dump(config_dict, jsonfile)
         data = {}
         for sheet in sheet_names:
@@ -212,11 +177,9 @@ def view_timeslots():
         df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
         data[sheet] = df.to_dict('records')
     new_schedule = schedule_maintenance(data, config_dict)
-    new_scheduler = scheduler_maintenance(data, config_dict)
     print(f"data: {data}")
     print(f"new_schedule: {new_schedule}")
-    print(f"new_scheduler: {new_scheduler}")
-    return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names)
+    return render_template('timeslots.html', data=data, filename=filename, sheet_names=sheet_names)
 
 
 @app.route('/update_slot', methods=['POST'])
