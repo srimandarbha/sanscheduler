@@ -1,10 +1,12 @@
-from flask import Flask, request, render_template, redirect, url_for, send_from_directory, flash
-import pandas as pd
-import os
-from openpyxl import load_workbook
-import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from openpyxl import load_workbook
+import pandas as pd
+import datetime
+import smtplib
+import json
+import os
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory, flash
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -13,6 +15,40 @@ app.secret_key = 'supersecretkey'  # Needed for flash messages
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def schedule_maintenance(data, config_dict):
+    end_date = datetime.datetime.strptime(config_dict['END_DATE'], '%Y-%m-%d')
+    plan_weekends = config_dict['PLAN_WEEKENDS'] == 'yes'
+    server_limit = config_dict['SERVER_LIMIT']
+    
+    # Generate new end dates
+    new_schedule_dict={}
+    
+    for sheet, time_slots in data.items():
+        new_schedule = []
+        for slot in time_slots:
+            slot_end_date = end_date
+            server_count = 0
+            while server_count < len(time_slots):
+                if not plan_weekends and slot_end_date.weekday() in [5, 6]:  # Skip weekends
+                    slot_end_date += datetime.timedelta(days=1)
+                    continue
+                new_schedule.append({
+                    'servers': slot['servers'],
+                    'email': slot['email'],
+                    'path': slot['path'],
+                    'array': slot['array'],
+                    'storage': slot['storage'],
+                    'enddate': slot_end_date.strftime('%Y-%m-%d'),
+                    'SNOW change': slot['SNOW change'],
+                    'maintenance_name': slot['maintenance_name']
+                })
+                server_count += 1
+                if server_count % int(server_limit) == 0:
+                    slot_end_date += datetime.timedelta(days=1)
+            new_schedule_dict[sheet]=new_schedule
+    
+    return new_schedule_dict
 
 @app.route('/')
 def index():
@@ -33,16 +69,16 @@ def upload_file():
     if file and allowed_file(file.filename):
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
+        wb = load_workbook(filepath)
+        sheet_names = wb.sheetnames
         config_filename=file.filename.split('.')[0]+'.config'
         if not os.path.exists(config_filename):
             config_dict={}
-            config_dict['END_DATE']=request.form.get("start")
-            config_dict['PLAN_WEEKENDS']=request.form.get('plan-weekends', 'no')
-            config_dict['SERVER_LIMIT']=request.form['server-limit']
-            with open(config_filename, 'w') as file:
-                file.write(str(config_dict))
-        wb = load_workbook(filepath)
-        sheet_names = wb.sheetnames
+            config_dict["END_DATE"]=request.form.get("start")
+            config_dict["PLAN_WEEKENDS"]=request.form.get("plan-weekends", "no")
+            config_dict["SERVER_LIMIT"]=request.form["server-limit"]
+            with open(config_filename, 'w') as jsonfile:
+                json.dump(config_dict, jsonfile)
         data = {}
         for sheet in sheet_names:
             df = pd.read_excel(filepath, sheet_name=sheet)
@@ -53,8 +89,10 @@ def upload_file():
 @app.route('/customize', methods=['POST'])
 def customize():
     filename = request.form['filename']
+    print(f"filename: {filename}")
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     custom_data = []
+    config_filename=filename.split('.')[0]+'.config'
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     
@@ -110,6 +148,11 @@ def view_timeslots():
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
+    config_filename=filename.split('.')[0]+'.config'
+    if os.path.isfile(config_filename):
+        with open(config_filename, 'r') as config_file:
+            config_dict = json.load(config_file)
+    
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     data = {}
@@ -117,7 +160,8 @@ def view_timeslots():
         df = pd.read_excel(filepath, sheet_name=sheet)
         df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
         data[sheet] = df.to_dict('records')
-    return render_template('timeslots.html', data=data, filename=filename, sheet_names=sheet_names)
+    new_schedule = schedule_maintenance(data, config_dict)
+    return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names)
 
 
 @app.route('/update_slot', methods=['POST'])
