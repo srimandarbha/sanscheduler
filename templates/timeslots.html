@@ -7,10 +7,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script>
         function enableCustomization(element, sheet, slotIndex) {
-            document.getElementById(`server_${sheet}_${slotIndex}`).disabled = !element.checked;
-            document.getElementById(`enddate_${sheet}_${slotIndex}`).disabled = !element.checked;
+            const serverInput = document.getElementById(`server_${sheet}_${slotIndex}`);
+            const enddateInput = document.getElementById(`enddate_${sheet}_${slotIndex}`);
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${sheet}_${slotIndex}`);
+            
+            const isChecked = element.checked;
+            serverInput.disabled = !isChecked;
+            enddateInput.style.display = isChecked ? 'none' : 'block';
+            enddateDropdown.style.display = isChecked ? 'inline' : 'none';
+            enddateDropdown.disabled = !isChecked;
         }
-        
+
         function toggleSelectAll(sheet) {
             const checkboxes = document.querySelectorAll(`input[type="checkbox"][name="customize_${sheet}"]`);
             checkboxes.forEach(checkbox => {
@@ -45,8 +52,8 @@
                     <th>SNOW Change</th>
                     <th>Maintenance Name</th>
                     <th>Notification</th>
-                    <th>Acknowledgment <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
-                    <th>Customize</th>
+                    <th>Acknowledgment</th>
+                    <th>Customize <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
                 </tr>
                 {% for slot in time_slots %}
                 <tr>
@@ -56,17 +63,24 @@
                         <td>{{ slot['path'] }}</td>
                         <td>{{ slot['array'] }}</td>
                         <td>{{ slot['storage'] }}</td>
-                        <td><input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
+                        <td>
+                            <input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled style="display: none;">
+                            <select name="custom_enddate_dropdown" id="enddate_dropdown_{{ sheet }}_{{ loop.index0 }}" disabled style="display: none;">
+                                {% for date in upcoming_dates %}
+                                    <option value="{{ date }}" {% if slot['enddate'] == date %} selected {% endif %}>{{ date }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
                         <td>{{ slot['SNOW change'] }}</td>
                         <td>{{ slot['maintenance_name'] }}</td>
                         <td>
                             <input type="checkbox" name="notification_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('notification', False) }}>
                         </td>
                         <td>
-                            <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" {{ 'checked' if slot.get('acknowledgment', False) }}>
+                            <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('acknowledgment', False) }}>
                         </td>
                         <td>
-                            <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})">
+                            <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" {{ 'checked' if slot.get('customize', False) }}>
                             <input type="hidden" name="filename" value="{{ filename }}">
                             <input type="hidden" name="sheet_name" value="{{ sheet }}">
                             <input type="hidden" name="slot_index" value="{{ loop.index0 }}">

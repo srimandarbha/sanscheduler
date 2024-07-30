@@ -36,7 +36,7 @@ def schedule_maintenance(data, config):
         current_date += datetime.timedelta(days=1)
         
     
-    schedule = {date: [] for date in schedule_dates}
+    #schedule = {date: [] for date in schedule_dates}
     # Check if there are enough dates to schedule all servers
     total_slots = len(schedule_dates) * server_limit
     total_servers = sum(len(records) for records in data.values())
@@ -54,13 +54,12 @@ def schedule_maintenance(data, config):
                 raise ValueError("Index out of range, more servers than available slots.")
             schedule_date = schedule_dates[date_index]
             upcoming_date = schedule_date.strftime('%Y-%m-%d')
-            print(f"existing record from excel: {record['enddate']}")
             record['enddate'] = upcoming_date
             upcoming_dates.append(upcoming_date)
             flat_schedule_dict[sheet].append(record)
             server_count += 1
     
-    return flat_schedule_dict
+    return flat_schedule_dict, upcoming_dates
 
 @app.route('/')
 def index():
@@ -90,7 +89,7 @@ def upload_file():
         config_dict["SERVER_LIMIT"]=request.form["server-limit"]
         config_dict["MAINT_LISTG"]=request.form["server-listing"]
         with open(config_filename, 'w') as jsonfile:
-                json.dump(config_dict, jsonfile)
+            json.dump(config_dict, jsonfile)
         data = {}
         for sheet in sheet_names:
             df = pd.read_excel(filepath, sheet_name=sheet)
@@ -103,7 +102,7 @@ def upload_file():
 def customize():
     filename = request.form['filename']
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    custom_data = []
+    #custom_data = []
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     
@@ -160,36 +159,50 @@ def view_timeslots():
         df = pd.read_excel(filepath, sheet_name=sheet)
         df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
         data[sheet] = df.to_dict('records')
-    new_schedule = schedule_maintenance(data, config_dict)
-    #print(f"new_schedule: {new_schedule}")
-    return render_template('timeslots.html', data=data, filename=filename, sheet_names=sheet_names)
+    new_schedule, upcoming_dates = schedule_maintenance(data, config_dict)
+    upcoming_dates = list(set(upcoming_dates))
+    #print(f"new_schedule: {new_schedule}, upcoming_dates: {upcoming_dates}")
+    return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names, upcoming_dates=upcoming_dates)
 
 
 @app.route('/update_slots', methods=['POST'])
 def update_slots():
     filename = request.form['filename']
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    if not os.path.exists(filepath):
+        flash('File does not exist', 'error')
+        return redirect(url_for('view_timeslots', filename=filename))
+
     wb = load_workbook(filepath)
-    
-    for sheet_name in wb.sheetnames:
+
+    # Retrieve the sheets from the workbook
+    sheet_names = wb.sheetnames
+
+    for sheet_name in sheet_names:
         ws = wb[sheet_name]
-        rows = len(request.form.getlist(f'servers_{sheet_name}_0'))
-        
-        for i in range(rows):
+
+        # Iterate over slots based on form data
+        i = 0
+        while f'servers_{sheet_name}_{i}' in request.form:
             custom_server = request.form.get(f'servers_{sheet_name}_{i}')
-            custom_enddate = request.form.get(f'enddate_{sheet_name}_{i}')
+            custom_enddate = request.form.get(f'enddate_{sheet_name}_{i}_dropdown', request.form.get(f'enddate_{sheet_name}_{i}'))
             acknowledgment = request.form.get(f'acknowledgment_{sheet_name}_{i}')
             notification = request.form.get(f'notification_{sheet_name}_{i}')
-            
+
+            # Debug print statements
+            print(f'Updating row {i+2} in sheet {sheet_name}: Server: {custom_server}, End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+
             ws.cell(row=i + 2, column=1, value=custom_server)
             ws.cell(row=i + 2, column=6, value=custom_enddate)
             ws.cell(row=i + 2, column=9, value='Yes' if notification else 'No')  # Assuming column 9 for notification
             ws.cell(row=i + 2, column=10, value='Yes' if acknowledgment else 'No')  # Assuming column 10 for acknowledgment
-    
+
+            i += 1
+
     wb.save(filepath)
     flash('All slots updated successfully', 'success')
     return redirect(url_for('view_timeslots', filename=filename))
-
 
 
 @app.route('/update_slot', methods=['POST'])
@@ -198,22 +211,26 @@ def update_slot():
     sheet_name = request.form['sheet_name']
     slot_index = int(request.form['slot_index'])
     custom_server = request.form['custom_server']
-    custom_enddate = request.form['custom_enddate']
-    acknowledgment = 'acknowledgment_{}_{}'.format(sheet_name, slot_index)
-    notification = 'notification_{}_{}'.format(sheet_name, slot_index)
-    
+    custom_enddate = request.form.get('custom_enddate_dropdown', request.form.get('custom_enddate'))
+    acknowledgment = request.form.get(f'acknowledgment_{sheet_name}_{slot_index}')
+    notification = request.form.get(f'notification_{sheet_name}_{slot_index}')
+
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
     ws = wb[sheet_name]
-    
+
+    # Debug print statements
+    print(f'Updating row {slot_index + 2} in sheet {sheet_name}: Server: {custom_server}, End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+
     ws.cell(row=slot_index + 2, column=1, value=custom_server)
     ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
-    ws.cell(row=slot_index + 2, column=9, value='Yes' if request.form.get(notification) else 'No')  # Assuming column 9 for notification
-    ws.cell(row=slot_index + 2, column=10, value='Yes' if request.form.get(acknowledgment) else 'No')  # Assuming column 10 for acknowledgment
-    
+    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')  # Assuming column 9 for notification
+    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')  # Assuming column 10 for acknowledgment
+
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
     return redirect(url_for('view_timeslots', filename=filename))
+
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
