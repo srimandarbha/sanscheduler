@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Slots</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function enableCustomization(element, sheet, slotIndex) {
+            document.getElementById(`server_${sheet}_${slotIndex}`).disabled = !element.checked;
+            document.getElementById(`enddate_${sheet}_${slotIndex}`).disabled = !element.checked;
+        }
+    </script>
+</head>
+<body>
+    <ul class="nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="/timeslots?filename={{ filename }}">Time Slots</a></li>
+    </ul>
+    <h1>Time Slots</h1>
+    <form action="/send_reminder" method="post">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <input type="submit" value="Send Reminder Emails">
+    </form>
+    {% for sheet, time_slots in data.items() %}
+        <h2>Sheet: {{ sheet }}</h2>
+        <table>
+            <tr>
+                <th>Server</th>
+                <th>Email</th>
+                <th>Path</th>
+                <th>Array</th>
+                <th>Storage</th>
+                <th>End Date</th>
+                <th>SNOW Change</th>
+                <th>Maintenance Name</th>
+                <th>Customize</th>
+            </tr>
+            {% for slot in time_slots %}
+            <tr>
+                <form action="/update_slot" method="post">
+                    <td><input type="text" name="custom_server" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
+                    <td>{{ slot['email'] }}</td>
+                    <td>{{ slot['path'] }}</td>
+                    <td>{{ slot['array'] }}</td>
+                    <td>{{ slot['storage'] }}</td>
+                    <td><input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
+                    <td>{{ slot['SNOW change'] }}</td>
+                    <td>{{ slot['maintenance_name'] }}</td>
+                    <td>
+                        <input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})">
+                        <input type="hidden" name="filename" value="{{ filename }}">
+                        <input type="hidden" name="sheet_name" value="{{ sheet }}">
+                        <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
+                        <input type="submit" value="Save" disabled>
+                    </td>
+                </form>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+</body>
+</html>

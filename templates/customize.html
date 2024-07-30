@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Time Slots</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <ul class="nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="/timeslots?filename={{ filename }}">Time Slots</a></li>
+    </ul>
+    <h1>Customize Time Slots</h1>
+    <form action="/customize" method="post">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        {% for sheet, time_slots in data.items() %}
+            <h2>Sheet: {{ sheet }}</h2>
+            <table>
+                <tr>
+                    <th>Select</th>
+                    <th>Server</th>
+                    <th>Email</th>
+                    <th>Path</th>
+                    <th>Array</th>
+                    <th>Storage</th>
+                    <th>End Date</th>
+                    <th>SNOW Change</th>
+                    <th>Maintenance Name</th>
+                </tr>
+                {% for slot in time_slots %}
+                <tr>
+                    <td><input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})"></td>
+                    <td><input type="text" name="custom_server_{{ sheet }}" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
+                    <td><input type="text" name="custom_email_{{ sheet }}" id="email_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['email'] }}" disabled></td>
+                    <td><input type="text" name="custom_path_{{ sheet }}" id="path_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['path'] }}" disabled></td>
+                    <td><input type="text" name="custom_array_{{ sheet }}" id="array_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['array'] }}" disabled></td>
+                    <td><input type="text" name="custom_storage_{{ sheet }}" id="storage_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['storage'] }}" disabled></td>
+                    <td><input type="text" name="custom_enddate_{{ sheet }}" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
+                    <td><input type="text" name="custom_snow_change_{{ sheet }}" id="snow_change_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['SNOW change'] }}" disabled></td>
+                    <td><input type="text" name="custom_maintenance_name_{{ sheet }}" id="maintenance_name_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['maintenance_name'] }}" disabled></td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endfor %}
+        <input type="submit" value="Save Custom Slots">
+    </form>
+</body>
+</html>
