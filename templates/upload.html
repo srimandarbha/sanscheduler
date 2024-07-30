@@ -12,6 +12,7 @@
         var yyyy = today.getFullYear();
         today = yyyy + '-' + mm + '-' + dd;
         document.getElementById("start").setAttribute("min", today);
+        document.getElementById("start").setAttribute("value", today);
       </script>
 </head>
 <body>
@@ -28,7 +29,7 @@
           </tr>
           <tr>
             <td><label for="start">Scheduled End Date:</label></td>
-            <td><input type="date" id="start" name="start" value="2018-07-22" min="" max=""></td>
+            <td><input type="date" id="start" name="start" value="" min="" max=""></td>
           </tr>
           <tr>
             <td><label for="crs">Scheduling CR's on weekends?</label></td>

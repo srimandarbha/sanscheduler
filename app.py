@@ -16,6 +16,58 @@ app.secret_key = 'supersecretkey'  # Needed for flash messages
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+def is_weekend(date):
+    return date.weekday() >= 5  # Saturday and Sunday are 5 and 6
+
+def schedule_maintenance(data, config):
+    start_date = datetime.date.today()
+    end_date = datetime.datetime.strptime(config['END_DATE'], '%Y-%m-%d').date()
+    plan_weekends = config['PLAN_WEEKENDS'] == 'yes'
+    server_limit = int(config['SERVER_LIMIT'])
+    
+    print(plan_weekends,server_limit)
+    # Generate the date range
+    schedule_dates = []
+    current_date = start_date
+    while current_date <= end_date:
+        if plan_weekends and current_date.weekday() in [5,6]:  # Weekdays are 0-4
+            print(f"weekend:{current_date}")
+            schedule_dates.append(current_date)
+        elif (not plan_weekends) and current_date.weekday() in [0,1,2,3,4]:
+            print(f"weekday:{current_date}")
+            schedule_dates.append(current_date)
+        current_date += datetime.timedelta(days=1)
+        
+    
+    schedule = {date: [] for date in schedule_dates}
+    # Check if there are enough dates to schedule all servers
+    total_slots = len(schedule_dates) * server_limit
+    total_servers = sum(len(records) for records in data.values())
+    if total_servers > total_slots:
+        raise ValueError("Not enough scheduling slots to fit all servers.")
+    
+    # Distribute servers across the available dates
+    server_count = 0
+    for sheet, records in data.items():
+        for record in records:
+            date_index = server_count // server_limit
+            if date_index >= len(schedule_dates):
+                raise ValueError("Index out of range, more servers than available slots.")
+            schedule_date = schedule_dates[date_index]
+            print(schedule_date)
+            record['enddate'] = schedule_date
+            schedule[schedule_date].append(record)
+            server_count += 1
+
+    # Flatten the schedule for easier processing in the template
+    flat_schedule = []
+    for date, records in schedule.items():
+        for record in records:
+            flat_schedule.append(record)
+    
+    return flat_schedule
+
+
 def schedule_maintenance(data, config_dict):
     end_date = datetime.datetime.strptime(config_dict['END_DATE'], '%Y-%m-%d')
     plan_weekends = config_dict['PLAN_WEEKENDS'] == 'yes'
@@ -92,7 +144,6 @@ def customize():
     print(f"filename: {filename}")
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     custom_data = []
-    config_filename=filename.split('.')[0]+'.config'
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     
@@ -161,6 +212,10 @@ def view_timeslots():
         df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
         data[sheet] = df.to_dict('records')
     new_schedule = schedule_maintenance(data, config_dict)
+    new_scheduler = scheduler_maintenance(data, config_dict)
+    print(f"data: {data}")
+    print(f"new_schedule: {new_schedule}")
+    print(f"new_scheduler: {new_scheduler}")
     return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names)
 
 
