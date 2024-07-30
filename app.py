@@ -94,6 +94,7 @@ def upload_file():
         config_dict["END_DATE"]=request.form.get("start")
         config_dict["PLAN_WEEKENDS"]=request.form.get("plan-weekends", "no")
         config_dict["SERVER_LIMIT"]=request.form["server-limit"]
+        config_dict["MAINT_LISTG"]=request.form["server-listing"]
         with open(config_filename, 'w') as jsonfile:
                 json.dump(config_dict, jsonfile)
         data = {}

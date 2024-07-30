@@ -17,6 +17,14 @@
             document.querySelector(`#snow_change_${sheetName}_${index}`).disabled = !isChecked;
             document.querySelector(`#maintenance_name_${sheetName}_${index}`).disabled = !isChecked;
         }
+
+        function selectAll(checkbox, sheetName) {
+            const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-sheet="${sheetName}"]`);
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+                enableCustomization(cb, sheetName, cb.dataset.index);
+            });
+        }
     </script>
 </head>
 <body>
@@ -30,6 +38,7 @@
         <input type="hidden" name="filename" value="{{ filename }}">
         {% for sheet, time_slots in data.items() %}
             <h2>Sheet: {{ sheet }}</h2>
+            <input type="checkbox" onclick="selectAll(this, '{{ sheet }}')"> Select All
             <table>
                 <tr>
                     <th>Select</th>
@@ -44,7 +53,7 @@
                 </tr>
                 {% for slot in time_slots %}
                 <tr>
-                    <td><input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})"></td>
+                    <td><input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" data-sheet="{{ sheet }}" data-index="{{ loop.index0 }}"></td>
                     <td><input type="text" name="custom_server_{{ sheet }}[]" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
                     <td><input type="text" name="custom_email_{{ sheet }}[]" id="email_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['email'] }}" disabled></td>
                     <td><input type="text" name="custom_path_{{ sheet }}[]" id="path_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['path'] }}" disabled></td>
