@@ -16,7 +16,11 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect('timeslots')
+
+@app.route('/uploads')
+def uploads():
+    return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -84,17 +88,28 @@ def customize():
 
 @app.route('/timeslots')
 def timeslots():
+    filenames = os.listdir(app.config['UPLOAD_FOLDER'])
+    filenames = [f for f in filenames if allowed_file(f)]  # Filter only allowed files
+    return render_template('timeslot.html', filenames=filenames)
+
+@app.route('/view_timeslots')
+def view_timeslots():
     filename = request.args.get('filename')
     if not filename:
-        return redirect(url_for('index'))
+        return redirect(url_for('timeslots'))
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(filepath):
+        flash('File not found', 'danger')
+        return redirect(url_for('timeslots'))
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     data = {}
     for sheet in sheet_names:
         df = pd.read_excel(filepath, sheet_name=sheet)
+        df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
         data[sheet] = df.to_dict('records')
     return render_template('timeslots.html', data=data, filename=filename, sheet_names=sheet_names)
+
 
 @app.route('/update_slot', methods=['POST'])
 def update_slot():

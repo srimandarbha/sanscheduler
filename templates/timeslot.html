@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Time Slots</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <ul class="nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="/timeslots">Time Slots</a></li>
+    </ul>
+    <h1>Ongoing SAN maintainances</h1>
+    <ul>
+        {% for filename in filenames %}
+            <li>
+                <a href="{{ url_for('view_timeslots', filename=filename) }}">{{ filename }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

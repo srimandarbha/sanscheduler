@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Details</title>
+</head>
+<body>
+    <ul class="nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="/timeslots?filename={{ filename }}">Time Slots</a></li>
+    </ul>
+    <h1>Server Details</h1>
+    <table>
+        <tr>
+            <th>Server</th>
+            <th>Email</th>
+            <th>Path</th>
+            <th>Array</th>
+            <th>Storage</th>
+            <th>End Date</th>
+            <th>SNOW Change</th>
+            <th>Maintenance Name</th>
+        </tr>
+        <tr>
+            <td>{{ row['servers'] }}</td>
+            <td>{{ row['email'] }}</td>
+            <td>{{ row['path'] }}</td>
+            <td>{{ row['array'] }}</td>
+            <td>{{ row['storage'] }}</td>
+            <td>{{ row['enddate'] }}</td>
+            <td>{{ row['SNOW change'] }}</td>
+            <td>{{ row['maintenance_name'] }}</td>
+        </tr>
+    </table>
+    <a href="{{ url_for('timeslots', filename=filename) }}">Back to Time Slots</a>
+</body>
+</html>
