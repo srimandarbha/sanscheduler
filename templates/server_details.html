@@ -21,6 +21,8 @@
             <th>End Date</th>
             <th>SNOW Change</th>
             <th>Maintenance Name</th>
+            <th>Notification</th>
+            <th>Acknowledgment</th>
         </tr>
         <tr>
             <td>{{ row['servers'] }}</td>
@@ -31,6 +33,8 @@
             <td>{{ row['enddate'] }}</td>
             <td>{{ row['SNOW change'] }}</td>
             <td>{{ row['maintenance_name'] }}</td>
+            <td>{{ row['notification'] }}</td>
+            <td>{{ row['acknowledgment'] }}</td>
         </tr>
     </table>
     <a href="{{ url_for('timeslots', filename=filename) }}">Back to Time Slots</a>

@@ -7,20 +7,36 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <ul class="nav">
-        <li><a href="/">Home</a></li>
-        <li><a href="/uploads">Maintenance</a></li>
-    </ul>
-    <h1>Ongoing SAN maintainances</h1>
-    <ul>
-        {% for filename in filenames %}
+    <nav class="navbar">
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/uploads">Maintenance</a></li>
+        </ul>
+    </nav>
+    <header>
+        <h2>Ongoing SAN maintainances</h2>
+    </header>
+    <main>
+        {% if filenames %}
+        <ul>
+            {% for filename in filenames %}
             <li>
                 <a href="{{ url_for('view_timeslots', filename=filename) }}">{{ filename }}</a>
             </li>
-        {% endfor %}
-    </ul>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No maintenance schedules available.</p>
+        {% endif %}
+    </main>
+    <aside>
+        <h2>SAN Bridge</h2>
+        <p>Welcome to SAN Bridge, where you can find information about our SAN maintenance schedules.</p>
+        <p>This website allows you to view and upload maintenance schedules in Excel format.</p>
+        <p>For more information, please contact our support team.</p>
+    </aside>
     <footer class="footer">
-		<p></p>
-	</footer>
+        <p></p>
+    </footer>
 </body>
 </html>

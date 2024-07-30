@@ -12,6 +12,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'xls', 'xlsx'}
 app.secret_key = 'supersecretkey'  # Needed for flash messages
+upcoming_dates=[]
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -24,8 +25,6 @@ def schedule_maintenance(data, config):
     end_date = datetime.datetime.strptime(config['END_DATE'], '%Y-%m-%d').date()
     plan_weekends = config['PLAN_WEEKENDS'] == 'yes'
     server_limit = int(config['SERVER_LIMIT'])
-    
-    print(plan_weekends,server_limit)
     # Generate the date range
     schedule_dates = []
     current_date = start_date
@@ -56,17 +55,18 @@ def schedule_maintenance(data, config):
             schedule_date = schedule_dates[date_index]
             record['enddate'] = schedule_date.strftime('%Y-%m-%d')
             schedule[schedule_date].append(record)
+            flat_schedule_dict[sheet].append(record)
             server_count += 1
-        print(schedule)
 
     # Flatten the schedule for easier processing in the template
     flat_schedule = []
     for date, records in schedule.items():
-        print(date,records)
+        upcoming_dates.append(date.strftime('%Y-%m-%d'))
         for record in records:
             flat_schedule.append(record)
+    print(flat_schedule_dict)
     
-    return flat_schedule
+    return flat_schedule_dict
 
 @app.route('/')
 def index():
@@ -159,7 +159,6 @@ def view_timeslots():
     if os.path.isfile(config_filename):
         with open(config_filename, 'r') as config_file:
             config_dict = json.load(config_file)
-    
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     data = {}
@@ -168,9 +167,35 @@ def view_timeslots():
         df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
         data[sheet] = df.to_dict('records')
     new_schedule = schedule_maintenance(data, config_dict)
-    print(f"data: {data}")
-    print(f"new_schedule: {new_schedule}")
+    #print(f"new_schedule: {new_schedule}")
     return render_template('timeslots.html', data=data, filename=filename, sheet_names=sheet_names)
+
+
+@app.route('/update_slots', methods=['POST'])
+def update_slots():
+    filename = request.form['filename']
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    wb = load_workbook(filepath)
+    
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        rows = len(request.form.getlist(f'servers_{sheet_name}_0'))
+        
+        for i in range(rows):
+            custom_server = request.form.get(f'servers_{sheet_name}_{i}')
+            custom_enddate = request.form.get(f'enddate_{sheet_name}_{i}')
+            acknowledgment = request.form.get(f'acknowledgment_{sheet_name}_{i}')
+            notification = request.form.get(f'notification_{sheet_name}_{i}')
+            
+            ws.cell(row=i + 2, column=1, value=custom_server)
+            ws.cell(row=i + 2, column=6, value=custom_enddate)
+            ws.cell(row=i + 2, column=9, value='Yes' if notification else 'No')  # Assuming column 9 for notification
+            ws.cell(row=i + 2, column=10, value='Yes' if acknowledgment else 'No')  # Assuming column 10 for acknowledgment
+    
+    wb.save(filepath)
+    flash('All slots updated successfully', 'success')
+    return redirect(url_for('view_timeslots', filename=filename))
+
 
 
 @app.route('/update_slot', methods=['POST'])
@@ -180,18 +205,21 @@ def update_slot():
     slot_index = int(request.form['slot_index'])
     custom_server = request.form['custom_server']
     custom_enddate = request.form['custom_enddate']
-    print(f"updating_slot with slot_index {slot_index}")
+    acknowledgment = 'acknowledgment_{}_{}'.format(sheet_name, slot_index)
+    notification = 'notification_{}_{}'.format(sheet_name, slot_index)
+    
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
     ws = wb[sheet_name]
     
-    ws.cell(row=slot_index+2, column=1, value=custom_server)  # Adjust column index if needed
-    ws.cell(row=slot_index+2, column=6, value=custom_enddate)  # Adjust column index if needed
-    print(f"saving new maintenance schedule for {custom_server} on {custom_enddate}")
+    ws.cell(row=slot_index + 2, column=1, value=custom_server)
+    ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
+    ws.cell(row=slot_index + 2, column=9, value='Yes' if request.form.get(notification) else 'No')  # Assuming column 9 for notification
+    ws.cell(row=slot_index + 2, column=10, value='Yes' if request.form.get(acknowledgment) else 'No')  # Assuming column 10 for acknowledgment
+    
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
     return redirect(url_for('view_timeslots', filename=filename))
-
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
@@ -204,27 +232,26 @@ def send_reminder():
     for sheet in sheet_names:
         df = pd.read_excel(filepath, sheet_name=sheet)
         for _, row in df.iterrows():
-            server = row['servers']
-            email = row['email']
-            maintenance_name = row['maintenance_name']
-            enddate = row['enddate']
-            message = MIMEMultipart()
-            message['From'] = 'your_email@example.com'
-            message['To'] = email
-            message['Subject'] = 'Maintenance Reminder'
-            body = f'Dear User,\n\nThis is a reminder for the maintenance of server {server}.\nMaintenance Name: {maintenance_name}\nEnd Date: {enddate}\n\nThank you.'
-            message.attach(MIMEText(body, 'plain'))
-            try:
-                server = smtplib.SMTP('smtp.example.com', 587)
-                server.starttls()
-                server.login('your_email@example.com', 'your_password')
-                text = message.as_string()
-                server.sendmail('your_email@example.com', email, text)
-                server.quit()
-                emails_sent.append(email)
-            except Exception as e:
-                print(f'Failed to send email to {email}: {str(e)}')
-                flash(f'Failed to send email to {email}', 'danger')
+            if row['acknowledgment'] == 'Yes':  # Only send to acknowledged slots
+                server = row['servers']
+                email = row['email']
+                maintenance_name = row['maintenance_name']
+                enddate = row['enddate']
+                message = MIMEMultipart()
+                message['From'] = 'your_email@example.com'
+                message['To'] = email
+                message['Subject'] = 'Maintenance Reminder'
+                body = f'Dear User,\n\nThis is a reminder for the maintenance of server {server}.\nMaintenance Name: {maintenance_name}\nEnd Date: {enddate}\n\nThank you.'
+                message.attach(MIMEText(body, 'plain'))
+                try:
+                    with smtplib.SMTP('smtp.example.com', 587) as server:
+                        server.starttls()
+                        server.login('your_email@example.com', 'your_password')
+                        server.sendmail('your_email@example.com', email, message.as_string())
+                    emails_sent.append(email)
+                except Exception as e:
+                    print(f'Failed to send email to {email}: {str(e)}')
+                    flash(f'Failed to send email to {email}', 'danger')
     
     flash(f'Successfully sent emails to: {", ".join(emails_sent)}', 'success')
     return redirect(url_for('timeslots', filename=filename))
@@ -232,9 +259,6 @@ def send_reminder():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-def getServerCount():
-    pass
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):

@@ -30,43 +30,55 @@
         <input type="hidden" name="filename" value="{{ filename }}">
         <input type="submit" value="Send Reminder Emails">
     </form>
-    {% for sheet, time_slots in data.items() %}
-        <br>
-        <table>
-            <tr>
-                <th>Server</th>
-                <th>Email</th>
-                <th>Path</th>
-                <th>Array</th>
-                <th>Storage</th>
-                <th>Scheduled Date</th>
-                <th>SNOW Change</th>
-                <th>Maintenance Name</th>
-                <th>Customize <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
-            </tr>
-            {% for slot in time_slots %}
-            <tr>
-                <form action="/update_slot" method="post">
-                    <td><input type="text" name="custom_server" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
-                    <td>{{ slot['email'] }}</td>
-                    <td>{{ slot['path'] }}</td>
-                    <td>{{ slot['array'] }}</td>
-                    <td>{{ slot['storage'] }}</td>
-                    <td><input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
-                    <td>{{ slot['SNOW change'] }}</td>
-                    <td>{{ slot['maintenance_name'] }}</td>
-                    <td>
-                        <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})">
-                        <input type="hidden" name="filename" value="{{ filename }}">
-                        <input type="hidden" name="sheet_name" value="{{ sheet }}">
-                        <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
-                        <input type="submit" value="Save">
-                    </td>
-                </form>
-            </tr>
-            {% endfor %}
-        </table>
-    {% endfor %}
+    <form action="/update_slots" method="post">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        {% for sheet, time_slots in data.items() %}
+            <br>
+            <table>
+                <tr>
+                    <th>Server</th>
+                    <th>Email</th>
+                    <th>Path</th>
+                    <th>Array</th>
+                    <th>Storage</th>
+                    <th>Scheduled Date</th>
+                    <th>SNOW Change</th>
+                    <th>Maintenance Name</th>
+                    <th>Notification</th>
+                    <th>Acknowledgment <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
+                    <th>Customize</th>
+                </tr>
+                {% for slot in time_slots %}
+                <tr>
+                    <form action="/update_slot" method="post">
+                        <td><input type="text" name="custom_server" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
+                        <td>{{ slot['email'] }}</td>
+                        <td>{{ slot['path'] }}</td>
+                        <td>{{ slot['array'] }}</td>
+                        <td>{{ slot['storage'] }}</td>
+                        <td><input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
+                        <td>{{ slot['SNOW change'] }}</td>
+                        <td>{{ slot['maintenance_name'] }}</td>
+                        <td>
+                            <input type="checkbox" name="notification_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('notification', False) }}>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" {{ 'checked' if slot.get('acknowledgment', False) }}>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})">
+                            <input type="hidden" name="filename" value="{{ filename }}">
+                            <input type="hidden" name="sheet_name" value="{{ sheet }}">
+                            <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
+                            <input type="submit" value="Save">
+                        </td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endfor %}
+        <input type="submit" value="Save All">
+    </form>
     <footer class="footer">
         <p></p>
     </footer>
