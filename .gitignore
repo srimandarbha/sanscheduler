@@ -1,2 +1,3 @@
+uploads/*
 *.config
-uploads/*.xlsx
+uploads/CHG*.xlsx

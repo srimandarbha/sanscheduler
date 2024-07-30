@@ -53,18 +53,12 @@ def schedule_maintenance(data, config):
             if date_index >= len(schedule_dates):
                 raise ValueError("Index out of range, more servers than available slots.")
             schedule_date = schedule_dates[date_index]
-            record['enddate'] = schedule_date.strftime('%Y-%m-%d')
-            schedule[schedule_date].append(record)
+            upcoming_date = schedule_date.strftime('%Y-%m-%d')
+            print(f"existing record from excel: {record['enddate']}")
+            record['enddate'] = upcoming_date
+            upcoming_dates.append(upcoming_date)
             flat_schedule_dict[sheet].append(record)
             server_count += 1
-
-    # Flatten the schedule for easier processing in the template
-    flat_schedule = []
-    for date, records in schedule.items():
-        upcoming_dates.append(date.strftime('%Y-%m-%d'))
-        for record in records:
-            flat_schedule.append(record)
-    print(flat_schedule_dict)
     
     return flat_schedule_dict
 
