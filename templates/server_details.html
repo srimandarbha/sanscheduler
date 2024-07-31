@@ -33,7 +33,7 @@
             width: 150px; /* Adjust the width as needed */
         }
         
-        .table th:nth-child(5), .table td:nth-child(5) { /* Adjusts the Scheduled Date column */
+        .table th:nth-child(6), .table td:nth-child(6) { /* Adjusts the Scheduled Date column */
             width: 150px; /* Adjust the width as needed */
         }
     </style>
@@ -70,15 +70,15 @@
             const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
             const notification = document.querySelector(`input[name=notification_${index}]`).checked;
             const acknowledgment = document.querySelector(`input[name=acknowledgment_${index}]`).checked;
-            const email = document.querySelector(`input[name=email]`).value;
-            //const email = document.querySelector(`input[name=email_${index}]`).value;
+            const email = document.querySelector(`input[name=email_${index}]`).value;
+            const serverName = document.querySelector(`input[name=server_name_${index}]`).value;
 
             $.ajax({
                 type: 'POST',
                 url: '/update_slot_ajax',
                 data: {
                     filename: filename,
-                    slot_index: index,
+                    server_name: serverName,
                     enddate: enddateDropdown.value,
                     notification: notification,
                     acknowledgment: acknowledgment,
@@ -144,7 +144,7 @@
                     <td>{{ data['storage'] }}</td>
                     <td>
                         <input type="text" name="enddate" id="enddate_{{ loop.index0 }}" value="{{ data['enddate'] }}" class="form-control" disabled>
-                        <select class="form-control" name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" class="form-control" disabled style="display: none;" onchange="updateEnddateInput({{ loop.index0 }})">
+                        <select class="form-control" name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" disabled style="display: none;" onchange="updateEnddateInput({{ loop.index0 }})">
                             {% for date in upcoming_maintenance_dates %}
                                 <option value="{{ date }}" {% if data['enddate'] == date %} selected {% endif %}>{{ date }}</option>
                             {% endfor %}
@@ -162,7 +162,8 @@
                         <button type="button" class="btn btn-warning btn-sm" id="edit_button_{{ loop.index0 }}" onclick="enableEnddateEdit({{ loop.index0 }})">Edit</button>
                         <button type="button" class="btn btn-success btn-sm" id="save_button_{{ loop.index0 }}" style="display: none;" onclick="saveEdit({{ loop.index0 }}, '{{ filename }}')">Save</button>
                         <button type="button" class="btn btn-secondary btn-sm" id="cancel_button_{{ loop.index0 }}" style="display: none;" onclick="cancelEdit({{ loop.index0 }})">Cancel</button>
-                        <input type="hidden" name="email" id="email_{{ loop.index0 }}" value="{{ data['email'] }}">
+                        <input type="hidden" name="server_name_{{ loop.index0 }}" value="{{ data['servers'] }}">
+                        <input type="hidden" name="email_{{ loop.index0 }}" value="{{ data['email'] }}">
                     </td>
                 </tr>
                 {% endfor %}

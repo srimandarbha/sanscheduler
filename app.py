@@ -296,29 +296,41 @@ def update_slot():
 @app.route('/update_slot_ajax', methods=['POST'])
 def update_slot_ajax():
     filename = request.form['filename']
-    slot_index = int(request.form['slot_index'])
+    server_name = request.form['server_name']
     email = request.form['email']
     print(f"request form: {request.form}")
     custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
     print(custom_enddate)
-    acknowledgment = request.form.get(f'acknowledgment_{slot_index}') == 'true'
-    notification = request.form.get(f'notification_{slot_index}') == 'true'
+    acknowledgment = request.form.get('acknowledgment') == 'true'
+    notification = request.form.get('notification') == 'true'
     
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
     ws = wb['Sheet1']  # Adjust sheet name as needed
 
+    # Find the row that matches the server name
+    row_to_update = None
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=1):
+        if row[0].value == server_name:
+            row_to_update = row[0].row
+            break
+
+    if row_to_update is None:
+        flash('Server not found', 'error')
+        return jsonify({'status': 'error', 'message': 'Server not found'})
+
     # Debug print statements
-    print(f'Updating row {slot_index + 2} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+    print(f'Updating row {row_to_update} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
 
     # Update the cells (adjust column indices as needed)
-    ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
-    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')
-    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')
+    ws.cell(row=row_to_update, column=6, value=custom_enddate)
+    ws.cell(row=row_to_update, column=9, value='Yes' if notification else 'No')
+    ws.cell(row=row_to_update, column=10, value='Yes' if acknowledgment else 'No')
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
-    return jsonify({'status': 'success'}) 
+    return jsonify({'status': 'success'})
+
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
