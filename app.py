@@ -390,7 +390,11 @@ def server_details(email):
 
     unique_url = url_for('server_details', email=email, _external=True)
     
-    return render_template('server_details.html', server_data=server_data, filename=filename, unique_url=unique_url)
+    config_filename=maintname+".config"
+    config=load_config(config_filename)
+    upcoming_maintenance_dates=future_dates(config)
+    
+    return render_template('server_details.html', server_data=server_data, filename=filename, unique_url=unique_url, upcoming_maintenance_dates=upcoming_maintenance_dates)
 
 
 
