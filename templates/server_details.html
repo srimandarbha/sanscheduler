@@ -33,7 +33,7 @@
             width: 150px; /* Adjust the width as needed */
         }
         
-        .table th:nth-child(5), .table td:nth-child(5) { /* Adjusts the Scheduled Date column */
+        .table th:nth-child(6), .table td:nth-child(6) { /* Adjusts the Scheduled Date column */
             width: 150px; /* Adjust the width as needed */
         }
     </style>
@@ -65,13 +65,51 @@
             document.getElementById(`save_button_${index}`).style.display = 'none';
             document.getElementById(`cancel_button_${index}`).style.display = 'none';
         }
+
+        function saveEdit(index, filename) {
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
+            const notification = document.querySelector(`input[name=notification_${index}]`).checked;
+            const acknowledgment = document.querySelector(`input[name=acknowledgment_${index}]`).checked;
+            const email = document.querySelector(`input[name=email_${index}]`).value;
+            const serverName = document.querySelector(`input[name=server_name_${index}]`).value;
+
+            $.ajax({
+                type: 'POST',
+                url: '/update_slot_ajax',
+                data: {
+                    filename: filename,
+                    server_name: serverName,
+                    enddate: enddateDropdown.value,
+                    notification: notification,
+                    acknowledgment: acknowledgment,
+                    email: email
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        console.log('Slot updated successfully');
+                        window.location.reload();
+                        cancelEdit(index);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    alert('An error occurred while updating the slot');
+                }
+            });
+        }
+
+        function updateEnddateInput(index) {
+            const enddateInput = document.getElementById(`enddate_${index}`);
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
+            enddateInput.value = enddateDropdown.value;
+        }
     </script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <a class="navbar-brand" href="#">
             <img src="https://cdn-icons-png.flaticon.com/512/1208/1208913.png" alt="S.M.S Logo" width="30" height="30">
-            <span>SAN Bridge</span>
+            <span>S.M.S</span>
         </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
@@ -80,65 +118,62 @@
     </nav>
     <div class="container main-content">
         <h1 class="text-center mt-4">Server Details for {{ server_data[0]['email'] }}</h1>
-        <form action="/update_slot" method="post">
-            <input type="hidden" name="filename" value="{{ filename }}">
-            <table class="table table-bordered table-striped">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Server</th>
-                        <th>Email</th>
-                        <th>Path</th>
-                        <th>Array</th>
-                        <th>Storage</th>
-                        <th>Scheduled Date</th>
-                        <th>SNOW Change</th>
-                        <th>Maintenance Name</th>
-                        <th>Notification</th>
-                        <th>Acknowledgment</th>
-                        <th>Edit</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for data in server_data %}
-                    <tr>
-                        <td>{{ data['servers'] }}</td>
-                        <td>{{ data['email'] }}</td>
-                        <td>{{ data['path'] }}</td>
-                        <td>{{ data['array'] }}</td>
-                        <td>{{ data['storage'] }}</td>
-                        <td>
-                            <input type="text" name="enddate" id="enddate_{{ loop.index0 }}" value="{{ data['enddate'] }}" class="form-control" disabled>
-                            <select name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" class="form-control" disabled style="display: none;">
-                                {% for date in upcoming_dates %}
-                                    <option value="{{ date }}" {% if data['enddate'] == date %} selected {% endif %}>{{ date }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                        <td>{{ data['SNOW change'] }}</td>
-                        <td>{{ data['maintenance_name'] }}</td>
-                        <td>
-                            <input type="checkbox" name="notification_{{ loop.index0 }}" {{ 'checked' if data.get('notification', False) }}>
-                        </td>
-                        <td>
-                            <input type="checkbox" name="acknowledgment_{{ loop.index0 }}" {{ 'checked' if data.get('acknowledgment', False) }}>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-warning btn-sm" id="edit_button_{{ loop.index0 }}" onclick="enableEnddateEdit({{ loop.index0 }})">Edit</button>
-                            <button type="submit" class="btn btn-success btn-sm" id="save_button_{{ loop.index0 }}" style="display: none;">Save</button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="cancel_button_{{ loop.index0 }}" style="display: none;" onclick="cancelEdit({{ loop.index0 }})">Cancel</button>
-                            <input type="hidden" name="email" value="{{ data['email'] }}">
-                            <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </form>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Server</th>
+                    <th>Email</th>
+                    <th>Path</th>
+                    <th>Array</th>
+                    <th>Storage</th>
+                    <th>Scheduled Date</th>
+                    <th>SNOW Change</th>
+                    <th>Maintenance Name</th>
+                    <th>Notification</th>
+                    <th>Acknowledgment</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in server_data %}
+                <tr>
+                    <td>{{ data['servers'] }}</td>
+                    <td>{{ data['email'] }}</td>
+                    <td>{{ data['path'] }}</td>
+                    <td>{{ data['array'] }}</td>
+                    <td>{{ data['storage'] }}</td>
+                    <td>
+                        <input type="text" name="enddate" id="enddate_{{ loop.index0 }}" value="{{ data['enddate'] }}" class="form-control" disabled>
+                        <select class="form-control" name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" disabled style="display: none;" onchange="updateEnddateInput({{ loop.index0 }})">
+                            {% for date in upcoming_maintenance_dates %}
+                                <option value="{{ date }}" {% if data['enddate'] == date %} selected {% endif %}>{{ date }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>{{ data['SNOW change'] }}</td>
+                    <td>{{ data['maintenance_name'] }}</td>
+                    <td>
+                        <input type="checkbox" name="notification_{{ loop.index0 }}" {{ 'checked' if data.get('notification', False) }}>
+                    </td>
+                    <td>
+                        <input type="checkbox" name="acknowledgment_{{ loop.index0 }}" {{ 'checked' if data.get('acknowledgment', False) }}>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm" id="edit_button_{{ loop.index0 }}" onclick="enableEnddateEdit({{ loop.index0 }})">Edit</button>
+                        <button type="button" class="btn btn-success btn-sm" id="save_button_{{ loop.index0 }}" style="display: none;" onclick="saveEdit({{ loop.index0 }}, '{{ filename }}')">Save</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="cancel_button_{{ loop.index0 }}" style="display: none;" onclick="cancelEdit({{ loop.index0 }})">Cancel</button>
+                        <input type="hidden" name="server_name_{{ loop.index0 }}" value="{{ data['servers'] }}">
+                        <input type="hidden" name="email_{{ loop.index0 }}" value="{{ data['email'] }}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     <footer class="footer">
         <p>&copy; 2024 S.M.S - product of company. All rights reserved.</p>
     </footer>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
