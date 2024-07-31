@@ -203,12 +203,10 @@ def view_timeslots():
     data = {}
     for sheet in sheet_names:
         df = pd.read_excel(filepath, sheet_name=sheet)
-        df['url'] = df['email'].apply(lambda email: url_for('server_details', email=email))
-        print(df['url'])
+        df['url'] = df['email'].apply(lambda email: url_for('server_details', email=email,filename=filename))
         data[sheet] = df.to_dict('records')
     new_schedule, upcoming_dates = schedule_maintenance(data, config_dict)
     upcoming_dates = list(set(upcoming_dates))
-    #print(f"new_schedule: {new_schedule}, upcoming_dates: {upcoming_dates}")
     return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names, upcoming_dates=upcoming_dates)
 
 
@@ -343,7 +341,6 @@ def server_details(email):
 
     if not server_data:
         flash('No server data found for this email', 'warning')
-        print('No server data found for this email')
         return redirect(url_for('timeslots'))
 
     unique_url = url_for('server_details', email=email, _external=True)
