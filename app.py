@@ -91,6 +91,11 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('login'))
 
+@app.route('/download_template')
+def download_template():
+    # Replace 'static' with the directory where your template file is stored
+    return send_from_directory(directory='static', filename='template.xlsx', as_attachment=True)
+
 @app.route('/')
 def index():
     return redirect('timeslots')

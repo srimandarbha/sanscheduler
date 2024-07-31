@@ -7,15 +7,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Main navigation">
         <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/uploads">Maintenance</a></li>
-            <li><a href="/logout">logout</a></li>
+            <li><a href="/" aria-label="Home page">Home</a></li>
+            <li><a href="/uploads" aria-label="Maintenance schedules">Maintenance</a></li>
+            <li><a href="/download_template" aria-label="Download Excel Template">Download Template</a></li>
+            <li><a href="/logout" aria-label="Logout">Logout</a></li>
         </ul>
     </nav>
     <header>
-        <h2>Ongoing SAN maintainances</h2>
+        <h2>Ongoing SAN Maintenance</h2>
     </header>
     <main>
         {% if filenames %}
@@ -34,10 +35,10 @@
         <h2>SAN Bridge</h2>
         <p>Welcome to SAN Bridge, where you can find information about our SAN maintenance schedules.</p>
         <p>This website allows you to view and upload maintenance schedules in Excel format.</p>
-        <p>For more information, please contact our support team.</p>
+        <p>For more information, please contact our support team at <a href="mailto:support@example.com">support@example.com</a>.</p>
     </aside>
     <footer class="footer">
-        <p></p>
+        <p>&copy; 2024 SAN Bridge. All rights reserved.</p>
     </footer>
 </body>
 </html>
