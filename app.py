@@ -6,13 +6,24 @@ import datetime
 import smtplib
 import json
 import os
-from flask import Flask, request, render_template, redirect, url_for, send_from_directory, flash
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory, flash, session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'xls', 'xlsx'}
 app.secret_key = 'supersecretkey'  # Needed for flash messages
 upcoming_dates=[]
+
+# User data for demonstration purposes
+users = {
+    "admin": generate_password_hash("adminpassword"),
+    "user1": generate_password_hash("user1password")
+}
+
+# Function to check if user is admin
+def is_admin():
+    return session.get('username') == 'admin'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -61,6 +72,25 @@ def schedule_maintenance(data, config):
     
     return flat_schedule_dict, upcoming_dates
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username in users and check_password_hash(users[username], password):
+            session['username'] = username
+            flash('Login successful!', 'success')
+            return redirect(url_for('timeslots'))
+        else:
+            flash('Invalid credentials', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash('Logged out successfully!', 'success')
+    return redirect(url_for('login'))
+
 @app.route('/')
 def index():
     return redirect('timeslots')
@@ -71,6 +101,9 @@ def uploads():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    if 'username' not in session or not is_admin():
+        flash('Access denied', 'danger')
+        return redirect(url_for('login'))
     if 'file' not in request.files:
         return redirect(request.url)
     file = request.files['file']
@@ -135,16 +168,24 @@ def customize():
 
 @app.route('/timeslots')
 def timeslots():
+    if 'username' not in session:
+        flash('Please login to view this page', 'warning')
+        return redirect(url_for('login'))
     filenames = os.listdir(app.config['UPLOAD_FOLDER'])
     filenames = [f for f in filenames if allowed_file(f)]  # Filter only allowed files
     return render_template('timeslot.html', filenames=filenames)
 
 @app.route('/view_timeslots')
 def view_timeslots():
+    if 'username' not in session:
+        flash('Please login to view this page', 'warning')
+        return redirect(url_for('login'))
     filename = request.args.get('filename')
+    print(f"filename: {filename}")
     if not filename:
         return redirect(url_for('timeslots'))
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print(f"filepath: {filepath}")
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
@@ -157,7 +198,8 @@ def view_timeslots():
     data = {}
     for sheet in sheet_names:
         df = pd.read_excel(filepath, sheet_name=sheet)
-        df['url'] = df.apply(lambda row: f'/server_details/{filename}/{sheet}/{row.name}', axis=1)
+        df['url'] = df['email'].apply(lambda email: url_for('server_details', email=email))
+        print(df['url'])
         data[sheet] = df.to_dict('records')
     new_schedule, upcoming_dates = schedule_maintenance(data, config_dict)
     upcoming_dates = list(set(upcoming_dates))
@@ -270,6 +312,40 @@ def send_reminder():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/server_details/<path:email>', methods=['GET'])
+def server_details(email):
+    filename = request.args.get('filename')
+    if not filename:
+        flash('Filename is missing', 'danger')
+        return redirect(url_for('timeslots'))
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print(f"filepath: {filepath}")
+    if not os.path.isfile(filepath):
+        flash('File not found', 'danger')
+        return redirect(url_for('timeslots'))
+
+    wb = load_workbook(filepath)
+    sheet_names = wb.sheetnames
+    server_data = []
+
+    for sheet in sheet_names:
+        df = pd.read_excel(filepath, sheet_name=sheet)
+        for _, row in df.iterrows():
+            if row['email'] == email:
+                server_data.append(row.to_dict())
+
+    if not server_data:
+        flash('No server data found for this email', 'warning')
+        print('No server data found for this email')
+        return redirect(url_for('timeslots'))
+
+    unique_url = url_for('server_details', email=email, _external=True)
+    
+    return render_template('server_details.html', server_data=server_data, filename=filename, unique_url=unique_url)
+
+
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):

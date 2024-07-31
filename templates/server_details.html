@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <ul class="nav">
         <li><a href="/">Home</a></li>
-        <li><a href="/timeslots?filename={{ filename }}">Time Slots</a></li>
+        <li><a href="/uploads">Maintenance</a></li>
     </ul>
-    <h1>Server Details</h1>
+    <h1>Server Details for {{ server_data[0]['email'] }}</h1>
+    
+    <p>Unique URL: <a href="{{ unique_url }}">{{ unique_url }}</a></p>
+    
     <table>
         <tr>
             <th>Server</th>
@@ -18,28 +22,30 @@
             <th>Path</th>
             <th>Array</th>
             <th>Storage</th>
-            <th>End Date</th>
+            <th>Scheduled Date</th>
             <th>SNOW Change</th>
             <th>Maintenance Name</th>
             <th>Notification</th>
             <th>Acknowledgment</th>
         </tr>
+        {% for data in server_data %}
         <tr>
-            <td>{{ row['servers'] }}</td>
-            <td>{{ row['email'] }}</td>
-            <td>{{ row['path'] }}</td>
-            <td>{{ row['array'] }}</td>
-            <td>{{ row['storage'] }}</td>
-            <td>{{ row['enddate'] }}</td>
-            <td>{{ row['SNOW change'] }}</td>
-            <td>{{ row['maintenance_name'] }}</td>
-            <td>{{ row['notification'] }}</td>
-            <td>{{ row['acknowledgment'] }}</td>
+            <td>{{ data['servers'] }}</td>
+            <td>{{ data['email'] }}</td>
+            <td>{{ data['path'] }}</td>
+            <td>{{ data['array'] }}</td>
+            <td>{{ data['storage'] }}</td>
+            <td>{{ data['enddate'] }}</td>
+            <td>{{ data['SNOW change'] }}</td>
+            <td>{{ data['maintenance_name'] }}</td>
+            <td>{{ 'Yes' if data.get('notification', False) else 'No' }}</td>
+            <td>{{ 'Yes' if data.get('acknowledgment', False) else 'No' }}</td>
         </tr>
+        {% endfor %}
     </table>
-    <a href="{{ url_for('timeslots', filename=filename) }}">Back to Time Slots</a>
+    
     <footer class="footer">
-		<p></p>
-	</footer>
+        <p></p>
+    </footer>
 </body>
 </html>
