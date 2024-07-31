@@ -5,40 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Time Slots</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .navbar {
+            background-color: #dc3545;
+        }
+        .navbar-nav .nav-link {
+            color: white;
+        }
+        .footer {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        .main-content {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar" aria-label="Main navigation">
-        <ul>
-            <li><a href="/" aria-label="Home page">Home</a></li>
-            <li><a href="/uploads" aria-label="Maintenance schedules">Maintenance</a></li>
-            <li><a href="/download_template" aria-label="Download Excel Template">Download Template</a></li>
-            <li><a href="/logout" aria-label="Logout">Logout</a></li>
-        </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">
+            <img src="https://cdn-icons-png.flaticon.com/512/1208/1208913.png" alt="SAN Bridge Logo" width="30" height="30">
+            <span>SAN Bridge</span>
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="/" aria-label="Home page">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/uploads" aria-label="Maintenance schedules">Maintenance</a></li>
+                <li class="nav-item"><a class="nav-link" href="/download_template" aria-label="Download Excel Template">Download Template</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout" aria-label="Logout">Logout</a></li>
+            </ul>
+        </div>
     </nav>
-    <header>
-        <h2>Ongoing SAN Maintenance</h2>
-    </header>
-    <main>
-        {% if filenames %}
-        <ul>
-            {% for filename in filenames %}
-            <li>
-                <a href="{{ url_for('view_timeslots', filename=filename) }}">{{ filename }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No maintenance schedules available.</p>
-        {% endif %}
-    </main>
-    <aside>
-        <h2>SAN Bridge</h2>
-        <p>Welcome to SAN Bridge, where you can find information about our SAN maintenance schedules.</p>
-        <p>This website allows you to view and upload maintenance schedules in Excel format.</p>
-        <p>For more information, please contact our support team at <a href="mailto:support@example.com">support@example.com</a>.</p>
-    </aside>
+    <div class="container main-content">
+        <header class="text-center">
+            <h2>Ongoing SAN Maintenance</h2>
+        </header>
+        <main>
+            {% if filenames %}
+            <ul class="list-group">
+                {% for filename in filenames %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('view_timeslots', filename=filename) }}">{{ filename }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No maintenance schedules available.</p>
+            {% endif %}
+        </main>
+        <aside class="mt-4">
+            <h3>SAN Bridge</h3>
+            <p>Welcome to SAN Bridge, where you can find information about our SAN maintenance schedules.</p>
+            <p>This website allows you to view and upload maintenance schedules in Excel format.</p>
+            <p>For more information, please contact our support team at <a href="mailto:support@example.com">support@example.com</a>.</p>
+        </aside>
+    </div>
     <footer class="footer">
         <p>&copy; 2024 SAN Bridge. All rights reserved.</p>
     </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -5,56 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Excel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .navbar {
+            background-color: #dc3545;
+        }
+        .navbar-nav .nav-link {
+            color: white;
+        }
+        .footer {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        .main-content {
+            margin-top: 20px;
+        }
+        .form-label {
+            font-weight: bold;
+        }
+    </style>
     <script>
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0');
-        var yyyy = today.getFullYear();
-        today = yyyy + '-' + mm + '-' + dd;
-        document.getElementById("start").setAttribute("min", today);
-        document.getElementById("start").setAttribute("value", today);
-      </script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var yyyy = today.getFullYear();
+            today = yyyy + '-' + mm + '-' + dd;
+            document.getElementById("start").setAttribute("min", today);
+            document.getElementById("start").setAttribute("value", today);
+        });
+    </script>
 </head>
 <body>
-    <ul class="nav">
-        <li><a href="/">Home</a></li>
-        <li><a href="/timeslots">TimeSlots</a></li>
-        <li><a href="/logout">logout</a></li>
-    </ul>
-    <h1>Upload Excel File for Maintenance Windows</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <table border="1">
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-          <tr>
-            <td><label for="start">Scheduled End Date:</label></td>
-            <td><input type="date" id="start" name="start" value="" min="" max=""></td>
-          </tr>
-          <tr>
-            <td><label for="crs">Scheduling CR's on weekends?</label></td>
-            <td><input type="checkbox" id="plan-weekends" name="plan-weekends" value="yes" checked></td>
-          </tr>
-          <tr>
-            <td><label for="serverlimit">Number of Servers for maintenance daily basis (1-100):</label></td>
-            <td><input type="number" id="server-limit" name="server-limit" value="10" min="1" max="100"></td>
-          </tr>
-          <tr>
-            <td><label for="serverlisting">Number of maintenance for listing (1-100):</label></td>
-            <td><input type="number" id="server-listing" name="server-listing" value="10" min="1" max="10"></td>
-          </tr>
-          <tr>
-            <td><label for="excelsheet">Upload XLSX sheet:</label></td>
-            <td><input type="file" name="file"></td>
-          </tr>
-        </table>
-        <td colspan="2" align="center">
-            <br><input type="submit" value="Submit"><br>
-        </td>
-      </form>
-      <footer class="footer">
-		<p></p>
-	</footer>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">
+            <img src="https://cdn-icons-png.flaticon.com/512/1208/1208913.png" alt="SAN Bridge Logo" width="30" height="30">
+            <span>SAN Bridge</span>
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="/" aria-label="Home page">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/timeslots" aria-label="Time Slots">Time Slots</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout" aria-label="Logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container main-content">
+        <h1 class="text-center mt-4">Upload Excel File for Maintenance Windows</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group row">
+                <label for="start" class="col-sm-3 col-form-label form-label">Scheduled End Date:</label>
+                <div class="col-sm-9">
+                    <input type="date" id="start" name="start" class="form-control" value="" min="" max="">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="plan-weekends" class="col-sm-3 col-form-label form-label">Scheduling CR's on weekends?</label>
+                <div class="col-sm-9">
+                    <input type="checkbox" id="plan-weekends" name="plan-weekends" value="yes" checked>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="server-limit" class="col-sm-3 col-form-label form-label">Number of Servers for maintenance daily basis (1-100):</label>
+                <div class="col-sm-9">
+                    <input type="number" id="server-limit" name="server-limit" class="form-control" value="10" min="1" max="100">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="server-listing" class="col-sm-3 col-form-label form-label">Number of maintenance for listing (1-100):</label>
+                <div class="col-sm-9">
+                    <input type="number" id="server-listing" name="server-listing" class="form-control" value="10" min="1" max="10">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="file" class="col-sm-3 col-form-label form-label">Upload XLSX sheet:</label>
+                <div class="col-sm-9">
+                    <input type="file" name="file" class="form-control-file">
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-12 text-center">
+                    <button type="submit" class="btn btn-danger">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <footer class="footer">
+        <p>&copy; 2024 SAN Bridge. All rights reserved.</p>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
