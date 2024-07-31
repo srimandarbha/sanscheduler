@@ -108,8 +108,8 @@
                         <td>{{ data['storage'] }}</td>
                         <td>
                             <input type="text" name="enddate" id="enddate_{{ loop.index0 }}" value="{{ data['enddate'] }}" class="form-control" disabled>
-                            <select name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" class="form-control" disabled style="display: none;">
-                                {% for date in upcoming_dates %}
+                            <select class="form-control" name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" class="form-control" disabled style="display: none;">
+                                {% for date in upcoming_maintenance_dates %}
                                     <option value="{{ date }}" {% if data['enddate'] == date %} selected {% endif %}>{{ date }}</option>
                                 {% endfor %}
                             </select>
