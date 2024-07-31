@@ -25,6 +25,11 @@ users = {
 def is_admin():
     return session.get('username') == 'admin'
 
+def load_config(config_filename):
+    with open(config_filename, 'r') as config_file:
+        config_dict = json.load(config_file)
+    return config_dict
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
@@ -207,8 +212,9 @@ def view_timeslots():
         return redirect(url_for('timeslots'))
     config_filename=filename.split('.')[0]+'.config'
     if os.path.isfile(config_filename):
-        with open(config_filename, 'r') as config_file:
-            config_dict = json.load(config_file)
+        #with open(config_filename, 'r') as config_file:
+        config_dict=load_config(config_filename)
+            #config_dict = json.load(config_file)
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     data = {}
