@@ -5,19 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #dc3545;
+        }
+        .navbar-brand {
+            color: white;
+        }
+        .navbar-brand img {
+            width: 30px;
+            height: auto;
+            margin-right: 10px;
+        }
+        .navbar-brand h1 {
+            display: inline;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin-top: 50px;
+        }
+        .footer {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form method="post">
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required><br>
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required><br>
-        <input type="submit" value="Login">
-    </form>
-    <p>{{ get_flashed_messages() }}</p>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">
+            <img src="https://cdn-icons-png.flaticon.com/512/1208/1208913.png" alt="SAN Bridge Logo">
+            <h1>SAN Bridge</h1>
+        </a>
+    </nav>
+    <div class="container">
+        <form method="post">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" class="form-control" name="username" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" name="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-danger btn-block">Login</button>
+        </form>
+        {% if get_flashed_messages() %}
+            <p class="text-center mt-3">{{ get_flashed_messages() }}</p>
+        {% endif %}
+    </div>
     <footer class="footer">
-		<p></p>
-	</footer>
+        <p>&copy; 2024 SAN Bridge. All rights reserved.</p>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

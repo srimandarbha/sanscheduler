@@ -5,40 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Details</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function enableEnddateEdit(index) {
+            const enddateInput = document.getElementById(`enddate_${index}`);
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
+            const editButton = document.getElementById(`edit_button_${index}`);
+            const saveButton = document.getElementById(`save_button_${index}`);
+            const cancelButton = document.getElementById(`cancel_button_${index}`);
+
+            enddateInput.disabled = !enddateInput.disabled;
+            enddateDropdown.disabled = !enddateDropdown.disabled;
+            enddateInput.style.display = enddateInput.disabled ? 'none' : 'block';
+            enddateDropdown.style.display = enddateDropdown.disabled ? 'none' : 'inline';
+            editButton.style.display = enddateInput.disabled ? 'inline' : 'none';
+            saveButton.style.display = enddateInput.disabled ? 'none' : 'inline';
+            cancelButton.style.display = enddateInput.disabled ? 'none' : 'inline';
+        }
+
+        function cancelEdit(index) {
+            const enddateInput = document.getElementById(`enddate_${index}`);
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
+            enddateInput.disabled = true;
+            enddateDropdown.disabled = true;
+            enddateInput.style.display = 'none';
+            enddateDropdown.style.display = 'none';
+            document.getElementById(`edit_button_${index}`).style.display = 'inline';
+            document.getElementById(`save_button_${index}`).style.display = 'none';
+            document.getElementById(`cancel_button_${index}`).style.display = 'none';
+        }
+    </script>
 </head>
 <body>
     <ul class="nav">
     </ul>
     <h1>Server Details for {{ server_data[0]['email'] }}</h1>
     
-    <table>
-        <tr>
-            <th>Server</th>
-            <th>Email</th>
-            <th>Path</th>
-            <th>Array</th>
-            <th>Storage</th>
-            <th>Scheduled Date</th>
-            <th>SNOW Change</th>
-            <th>Maintenance Name</th>
-            <th>Notification</th>
-            <th>Acknowledgment</th>
-        </tr>
-        {% for data in server_data %}
-        <tr>
-            <td>{{ data['servers'] }}</td>
-            <td>{{ data['email'] }}</td>
-            <td>{{ data['path'] }}</td>
-            <td>{{ data['array'] }}</td>
-            <td>{{ data['storage'] }}</td>
-            <td>{{ data['enddate'] }}</td>
-            <td>{{ data['SNOW change'] }}</td>
-            <td>{{ data['maintenance_name'] }}</td>
-            <td>{{ 'Yes' if data.get('notification', False) else 'No' }}</td>
-            <td>{{ 'Yes' if data.get('acknowledgment', False) else 'No' }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <form action="/update_slot" method="post">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <table>
+            <tr>
+                <th>Server</th>
+                <th>Email</th>
+                <th>Path</th>
+                <th>Array</th>
+                <th>Storage</th>
+                <th>Scheduled Date</th>
+                <th>SNOW Change</th>
+                <th>Maintenance Name</th>
+                <th>Notification</th>
+                <th>Acknowledgment</th>
+                <th>Edit</th>
+            </tr>
+            {% for data in server_data %}
+            <tr>
+                <td>{{ data['servers'] }}</td>
+                <td>{{ data['email'] }}</td>
+                <td>{{ data['path'] }}</td>
+                <td>{{ data['array'] }}</td>
+                <td>{{ data['storage'] }}</td>
+                <td>
+                    <input type="text" name="enddate" id="enddate_{{ loop.index0 }}" value="{{ data['enddate'] }}" disabled>
+                    <select name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" disabled style="display: none;">
+                        {% for date in upcoming_dates %}
+                            <option value="{{ date }}" {% if data['enddate'] == date %} selected {% endif %}>{{ date }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>{{ data['SNOW change'] }}</td>
+                <td>{{ data['maintenance_name'] }}</td>
+                <td>
+                    <input type="checkbox" name="notification_{{ loop.index0 }}" {{ 'checked' if data.get('notification', False) }}>
+                </td>
+                <td>
+                    <input type="checkbox" name="acknowledgment_{{ loop.index0 }}" {{ 'checked' if data.get('acknowledgment', False) }}>
+                </td>
+                <td>
+                    <button type="button" id="edit_button_{{ loop.index0 }}" onclick="enableEnddateEdit({{ loop.index0 }})">Edit</button>
+                    <button type="submit" id="save_button_{{ loop.index0 }}" style="display: none;">Save</button>
+                    <button type="button" id="cancel_button_{{ loop.index0 }}" style="display: none;" onclick="cancelEdit({{ loop.index0 }})">Cancel</button>
+                    <input type="hidden" name="email" value="{{ data['email'] }}">
+                    <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </form>
     
     <footer class="footer">
         <p></p>

@@ -74,6 +74,7 @@ def schedule_maintenance(data, config):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    current_year = datetime.datetime.now().year
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -83,7 +84,7 @@ def login():
             return redirect(url_for('timeslots'))
         else:
             flash('Invalid credentials', 'danger')
-    return render_template('login.html')
+    return render_template('login.html', current_year=current_year)
 
 @app.route('/logout')
 def logout():
@@ -253,29 +254,27 @@ def update_slots():
 @app.route('/update_slot', methods=['POST'])
 def update_slot():
     filename = request.form['filename']
-    sheet_name = request.form['sheet_name']
     slot_index = int(request.form['slot_index'])
-    custom_server = request.form['custom_server']
-    custom_enddate = request.form.get('custom_enddate_dropdown', request.form.get('custom_enddate'))
-    acknowledgment = request.form.get(f'acknowledgment_{sheet_name}_{slot_index}')
-    notification = request.form.get(f'notification_{sheet_name}_{slot_index}')
+    email = request.form['email']
+    custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
+    acknowledgment = request.form.get(f'acknowledgment_{slot_index}')
+    notification = request.form.get(f'notification_{slot_index}')
 
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
-    ws = wb[sheet_name]
+    ws = wb['Sheet1']  # Adjust sheet name as needed
 
     # Debug print statements
-    print(f'Updating row {slot_index + 2} in sheet {sheet_name}: Server: {custom_server}, End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+    print(f'Updating row {slot_index + 2} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
 
-    ws.cell(row=slot_index + 2, column=1, value=custom_server)
+    # Update the cells (adjust column indices as needed)
     ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
-    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')  # Assuming column 9 for notification
-    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')  # Assuming column 10 for acknowledgment
+    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')
+    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
-    return redirect(url_for('view_timeslots', filename=filename))
-
+    return redirect(url_for('view_server_details', filename=filename))
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
