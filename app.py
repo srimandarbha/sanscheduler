@@ -75,14 +75,11 @@ def schedule_maintenance(data, config):
             date_index = server_count // int(server_limit)
             if date_index >= len(schedule_dates):
                 raise ValueError("Index out of range, more servers than available slots.")
-            schedule_date = schedule_dates[date_index]
-            upcoming_date = schedule_date
-            record['enddate'] = upcoming_date
-            upcoming_dates.append(upcoming_date)
+            record['enddate']  = schedule_dates[date_index]
             flat_schedule_dict[sheet].append(record)
             server_count += 1
     
-    return flat_schedule_dict, upcoming_dates
+    return flat_schedule_dict
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -202,9 +199,11 @@ def view_timeslots():
         return redirect(url_for('login'))
     filename = request.args.get('filename')
     session['filename']=filename
+    print(f"filename: {filename}")
     if not filename:
         return redirect(url_for('timeslots'))
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print(f"filepath: {filepath}")
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
@@ -220,8 +219,8 @@ def view_timeslots():
         df = pd.read_excel(filepath, sheet_name=sheet)
         df['url'] = df['email'].apply(lambda email: url_for('server_details', email=email,filename=filename))
         data[sheet] = df.to_dict('records')
-    new_schedule, upcoming_dates = schedule_maintenance(data, config_dict)
-    upcoming_dates = list(set(upcoming_dates))
+    new_schedule = schedule_maintenance(data, config_dict)
+    upcoming_dates = future_dates(config_dict)
     session['upcoming_dates']=upcoming_dates
     return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names, upcoming_dates=upcoming_dates)
 
@@ -294,39 +293,27 @@ def update_slot():
 @app.route('/update_slot_ajax', methods=['POST'])
 def update_slot_ajax():
     filename = request.form['filename']
-    server_name = request.form['server_name']
+    slot_index = int(request.form['slot_index'])
     email = request.form['email']
     custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
-    acknowledgment = request.form.get('acknowledgment') == 'true'
-    notification = request.form.get('notification') == 'true'
-    
+    acknowledgment = request.form.get(f'acknowledgment_{slot_index}')
+    notification = request.form.get(f'notification_{slot_index}')
+
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
     ws = wb['Sheet1']  # Adjust sheet name as needed
 
-    # Find the row that matches the server name
-    row_to_update = None
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=1):
-        if row[0].value == server_name:
-            row_to_update = row[0].row
-            break
-
-    if row_to_update is None:
-        flash('Server not found', 'error')
-        return jsonify({'status': 'error', 'message': 'Server not found'})
-
     # Debug print statements
-    print(f'Updating row {row_to_update} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+    print(f'Updating row {slot_index + 2} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
 
     # Update the cells (adjust column indices as needed)
-    ws.cell(row=row_to_update, column=6, value=custom_enddate)
-    ws.cell(row=row_to_update, column=9, value='Yes' if notification else 'No')
-    ws.cell(row=row_to_update, column=10, value='Yes')
+    ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
+    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')
+    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
-    return jsonify({'status': 'success'})
-
+    return jsonify({'status': 'success'}) 
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
@@ -339,10 +326,9 @@ def send_reminder():
     for sheet in sheet_names:
         df = pd.read_excel(filepath, sheet_name=sheet)
         for _, row in df.iterrows():
-            if row['acknowledgment'] == 'yes':  # Only send to acknowledged slots
+            if row['acknowledgment'] == 'Yes':  # Only send to acknowledged slots
                 server = row['servers']
                 email = row['email']
-                
                 maintenance_name = row['maintenance_name']
                 enddate = row['enddate']
                 message = MIMEMultipart()
@@ -371,12 +357,16 @@ def uploaded_file(filename):
 @app.route('/server_details/<path:email>', methods=['GET', 'POST'])
 def server_details(email):
     maintname = request.args.get('maintname')
+    print(f"session details: {session}")
+    print(f"session filename: {session.get('filename')}")
+    print(f"session upcoming dates: {session.get('upcoming_dates')}")
     filename=maintname+".xlsx"
     if not filename:
         flash('Filename is missing', 'danger')
         return redirect(url_for('timeslots'))
 
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print(f"filepath: {filepath}")
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
@@ -397,11 +387,7 @@ def server_details(email):
 
     unique_url = url_for('server_details', email=email, _external=True)
     
-    config_filename=maintname+".config"
-    config=load_config(config_filename)
-    upcoming_maintenance_dates=future_dates(config)
-    
-    return render_template('server_details.html', server_data=server_data, filename=filename, unique_url=unique_url, upcoming_maintenance_dates=upcoming_maintenance_dates)
+    return render_template('server_details.html', server_data=server_data, filename=filename, unique_url=unique_url)
 
 
 
