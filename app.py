@@ -298,10 +298,12 @@ def update_slot_ajax():
     filename = request.form['filename']
     slot_index = int(request.form['slot_index'])
     email = request.form['email']
+    print(f"request form: {request.form}")
     custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
-    acknowledgment = request.form.get(f'acknowledgment_{slot_index}')
-    notification = request.form.get(f'notification_{slot_index}')
-
+    print(custom_enddate)
+    acknowledgment = request.form.get(f'acknowledgment_{slot_index}') == 'true'
+    notification = request.form.get(f'notification_{slot_index}') == 'true'
+    
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
     ws = wb['Sheet1']  # Adjust sheet name as needed
