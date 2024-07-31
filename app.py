@@ -202,11 +202,9 @@ def view_timeslots():
         return redirect(url_for('login'))
     filename = request.args.get('filename')
     session['filename']=filename
-    print(f"filename: {filename}")
     if not filename:
         return redirect(url_for('timeslots'))
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    print(f"filepath: {filepath}")
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
@@ -298,9 +296,7 @@ def update_slot_ajax():
     filename = request.form['filename']
     server_name = request.form['server_name']
     email = request.form['email']
-    print(f"request form: {request.form}")
     custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
-    print(custom_enddate)
     acknowledgment = request.form.get('acknowledgment') == 'true'
     notification = request.form.get('notification') == 'true'
     
@@ -343,9 +339,10 @@ def send_reminder():
     for sheet in sheet_names:
         df = pd.read_excel(filepath, sheet_name=sheet)
         for _, row in df.iterrows():
-            if row['acknowledgment'] == 'Yes':  # Only send to acknowledged slots
+            if row['acknowledgment'] == 'yes':  # Only send to acknowledged slots
                 server = row['servers']
                 email = row['email']
+                
                 maintenance_name = row['maintenance_name']
                 enddate = row['enddate']
                 message = MIMEMultipart()
@@ -374,16 +371,12 @@ def uploaded_file(filename):
 @app.route('/server_details/<path:email>', methods=['GET', 'POST'])
 def server_details(email):
     maintname = request.args.get('maintname')
-    print(f"session details: {session}")
-    print(f"session filename: {session.get('filename')}")
-    print(f"session upcoming dates: {session.get('upcoming_dates')}")
     filename=maintname+".xlsx"
     if not filename:
         flash('Filename is missing', 'danger')
         return redirect(url_for('timeslots'))
 
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    print(f"filepath: {filepath}")
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
