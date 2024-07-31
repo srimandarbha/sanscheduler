@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Slots</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script>
         function enableCustomization(element, sheet, slotIndex) {
             const serverInput = document.getElementById(`server_${sheet}_${slotIndex}`);
@@ -26,76 +27,176 @@
             });
         }
     </script>
+    <style>
+        .navbar {
+            background-color: #dc3545;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+        }
+        .navbar-brand {
+            color: white !important;
+        }
+
+        .black-text {
+            color: black;
+          }
+        .navbar-brand img {
+            width: 30px;
+            height: auto;
+            margin-right: 10px;
+        }
+        .navbar-brand h1 {
+            display: inline;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .navbar-collapse {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          
+          .navbar-nav {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+          }
+          
+          .nav-item {
+            flex: 1;
+          }
+          
+          .nav-link {
+            text-align: center;
+          }
+        .footer {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        .form-control[disabled] {
+            width: auto;
+            max-width: 100%;
+            display: inline-block;
+            box-sizing: border-box;
+          }
+
+        .email-cell {
+            max-width: 200px;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        table {
+            margin-left: auto;
+            margin-right: auto;
+            width: fit-content; /* Optional: set a maximum width */
+        }
+
+        .table th:nth-child(1), .table td:nth-child(1) { /* Adjusts the Server column */
+            width: 150px; /* Adjust the width as needed */
+        }
+
+        .table th:nth-child(5), .table td:nth-child(5) { /* Adjusts the Scheduled Date column */
+            width: 150px; /* Adjust the width as needed */
+        }
+        input[type="checkbox"] {
+            width: 20px; /* Set the width to 20 pixels */
+            height: 20px; /* Set the height to 20 pixels */
+          }
+    </style>
 </head>
 <body>
-    <ul class="nav">
-        <li><a href="/">Home</a></li>
-        <li><a href="/uploads">Maintenance</a></li>
-        <li><a href="/logout">logout</a></li>
-    </ul>
-    <h1>Time Slots</h1>
-    <form action="/send_reminder" method="post">
-        <input type="hidden" name="filename" value="{{ filename }}">
-        <input type="submit" value="Send Reminder Emails">
-    </form>
-    <form action="/update_slots" method="post">
-        <input type="hidden" name="filename" value="{{ filename }}">
-        {% for sheet, time_slots in data.items() %}
-            <br>
-            <table>
-                <tr>
-                    <th>Server</th>
-                    <th>Email</th>
-                    <th>Path</th>
-                    <th>Array</th>
-                    <th>Storage</th>
-                    <th>Scheduled Date</th>
-                    <th>SNOW Change</th>
-                    <th>Maintenance Name</th>
-                    <th>Notification</th>
-                    <th>Acknowledgment</th>
-                    <th>Customize <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
-                </tr>
-                {% for slot in time_slots %}
-                <tr>
-                    <form action="/update_slot" method="post">
-                        <td><input type="text" name="custom_server" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
-                        <td>{{ slot['email'] }}</td>
-                        <td>{{ slot['path'] }}</td>
-                        <td>{{ slot['array'] }}</td>
-                        <td>{{ slot['storage'] }}</td>
-                        <td>
-                            <input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled>
-                            <select name="custom_enddate_dropdown" id="enddate_dropdown_{{ sheet }}_{{ loop.index0 }}" disabled style="display: none;">
-                                {% for date in upcoming_dates %}
-                                    <option value="{{ date }}" {% if slot['enddate'] == date %} selected {% endif %}>{{ date }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                        <td>{{ slot['SNOW change'] }}</td>
-                        <td>{{ slot['maintenance_name'] }}</td>
-                        <td>
-                            <input type="checkbox" name="notification_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('notification', False) }}>
-                        </td>
-                        <td>
-                            <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('acknowledgment', False) }}>
-                        </td>
-                        <td>
-                            <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" {{ 'checked' if slot.get('customize', False) }}>
-                            <input type="hidden" name="filename" value="{{ filename }}">
-                            <input type="hidden" name="sheet_name" value="{{ sheet }}">
-                            <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
-                            <input type="submit" value="Save">
-                        </td>
-                    </form>
-                </tr>
-                {% endfor %}
-            </table>
-        {% endfor %}
-        <input type="submit" value="Save All">
-    </form>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">
+            <img src="https://cdn-icons-png.flaticon.com/512/1208/1208913.png" alt="S.M.S">
+            <h1>S.M.S</h1>
+        </a>
+        <div class="collapse navbar-collapse justify-content-center">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link black-text" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/uploads">Maintenance</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Time Slots</h1>
+        <form action="/send_reminder" method="post" class="mb-3">
+            <input type="hidden" name="filename" value="{{ filename }}">
+            <input type="submit" class="btn btn-danger btn-block" value="Send Reminder Emails">
+        </form>
+        <form action="/update_slots" method="post">
+            <input type="hidden" name="filename" value="{{ filename }}">
+            {% for sheet, time_slots in data.items() %}
+                <h2 class="mt-4">{{ sheet }}</h2>
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Server</th>
+                            <th>Email</th>
+                            <th>Path</th>
+                            <th>Array</th>
+                            <th>Storage</th>
+                            <th>Scheduled Date</th>
+                            <th>SNOW Change</th>
+                            <th>Maintenance Name</th>
+                            <th>Notification</th>
+                            <th>Acknowledgment</th>
+                            <th>Customize <input type="checkbox" onclick="toggleSelectAll('{{ sheet }}')"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for slot in time_slots %}
+                    <tr>
+                        <form action="/update_slot" method="post">
+                            <td><input type="text" class="form-control" name="custom_server" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
+                            <td>{{ slot['email'] }}</td>
+                            <td>{{ slot['path'] }}</td>
+                            <td>{{ slot['array'] }}</td>
+                            <td>{{ slot['storage'] }}</td>
+                            <td>
+                                <input type="text" class="form-control" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled>
+                                <select class="form-control" name="custom_enddate_dropdown" id="enddate_dropdown_{{ sheet }}_{{ loop.index0 }}" disabled style="display: none;">
+                                    {% for date in upcoming_dates %}
+                                        <option value="{{ date }}" {% if slot['enddate'] == date %} selected {% endif %}>{{ date }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>{{ slot['SNOW change'] }}</td>
+                            <td>{{ slot['maintenance_name'] }}</td>
+                            <td>
+                                <input type="checkbox" name="notification_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('notification', False) }}>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('acknowledgment', False) }}>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" {{ 'checked' if slot.get('customize', False) }}>
+                                <input type="hidden" name="filename" value="{{ filename }}">
+                                <input type="hidden" name="sheet_name" value="{{ sheet }}">
+                                <input type="hidden" name="slot_index" value="{{ loop.index0 }}">
+                                <input type="submit" class="btn btn-danger" value="Save">
+                            </td>
+                        </form>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endfor %}
+            <input type="submit" class="btn btn-danger btn-block" value="Save All">
+        </form>
+    </div>
     <footer class="footer">
-        <p></p>
+        <p>&copy; 2024 S.M.S - product of company. All rights reserved.</p>
     </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

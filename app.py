@@ -6,7 +6,7 @@ import datetime
 import smtplib
 import json
 import os
-from flask import Flask, request, render_template, redirect, url_for, send_from_directory, flash, session
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory, flash, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -25,33 +25,45 @@ users = {
 def is_admin():
     return session.get('username') == 'admin'
 
+def load_config(config_filename):
+    with open(config_filename, 'r') as config_file:
+        config_dict = json.load(config_file)
+    return config_dict
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 def is_weekend(date):
     return date.weekday() >= 5  # Saturday and Sunday are 5 and 6
 
-def schedule_maintenance(data, config):
+def future_dates(config):
     start_date = datetime.date.today()
-    end_date = datetime.datetime.strptime(config['END_DATE'], '%Y-%m-%d').date()
-    plan_weekends = config['PLAN_WEEKENDS'] == 'yes'
-    server_limit = int(config['SERVER_LIMIT'])
+    end_date=config.get('END_DATE')
+    server_limit = config.get('SERVER_LIMIT') or 10
+    if not end_date:
+        end_date = start_date + datetime.timedelta(days=45)
+    else:
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+    plan_weekends = config.get('PLAN_WEEKENDS') == 'yes' or "yes"
     # Generate the date range
     schedule_dates = []
     current_date = start_date
     while current_date <= end_date:
         if plan_weekends and current_date.weekday() in [5,6]:  # Weekdays are 0-4
-            schedule_dates.append(current_date)
+            schedule_dates.append(current_date.strftime('%Y-%m-%d'))
         elif (not plan_weekends) and current_date.weekday() in [0,1,2,3,4]:
-            schedule_dates.append(current_date)
+            schedule_dates.append(current_date.strftime('%Y-%m-%d'))
         current_date += datetime.timedelta(days=1)
-        
-    
+    return schedule_dates
+
+def schedule_maintenance(data, config):
+    schedule_dates=future_dates(config)
+    server_limit = config.get('SERVER_LIMIT') or 10
     #schedule = {date: [] for date in schedule_dates}
     # Check if there are enough dates to schedule all servers
     total_slots = len(schedule_dates) * server_limit
     total_servers = sum(len(records) for records in data.values())
-    if total_servers > total_slots:
+    if total_servers > int(total_slots):
         raise ValueError("Not enough scheduling slots to fit all servers.")
     
     # Distribute servers across the available dates
@@ -60,11 +72,11 @@ def schedule_maintenance(data, config):
         flat_schedule_dict={}
         flat_schedule_dict[sheet]=[]
         for record in records:
-            date_index = server_count // server_limit
+            date_index = server_count // int(server_limit)
             if date_index >= len(schedule_dates):
                 raise ValueError("Index out of range, more servers than available slots.")
             schedule_date = schedule_dates[date_index]
-            upcoming_date = schedule_date.strftime('%Y-%m-%d')
+            upcoming_date = schedule_date
             record['enddate'] = upcoming_date
             upcoming_dates.append(upcoming_date)
             flat_schedule_dict[sheet].append(record)
@@ -74,6 +86,7 @@ def schedule_maintenance(data, config):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    current_year = datetime.datetime.now().year
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -83,7 +96,7 @@ def login():
             return redirect(url_for('timeslots'))
         else:
             flash('Invalid credentials', 'danger')
-    return render_template('login.html')
+    return render_template('login.html', current_year=current_year)
 
 @app.route('/logout')
 def logout():
@@ -126,12 +139,14 @@ def upload_file():
         config_dict["PLAN_WEEKENDS"]=request.form.get("plan-weekends", "no")
         config_dict["SERVER_LIMIT"]=request.form["server-limit"]
         config_dict["MAINT_LISTG"]=request.form["server-listing"]
+        config_dict["FILENAME"]=file.filename
         with open(config_filename, 'w') as jsonfile:
             json.dump(config_dict, jsonfile)
         data = {}
         for sheet in sheet_names:
             df = pd.read_excel(filepath, sheet_name=sheet)
             data[sheet] = df.to_dict('records')
+        session['filename'] = file.filename
         return render_template('customize.html', data=data, filename=file.filename, sheet_names=sheet_names)
     flash('Invalid file type', 'danger')
     return redirect(request.url)
@@ -186,6 +201,7 @@ def view_timeslots():
         flash('Please login to view this page', 'warning')
         return redirect(url_for('login'))
     filename = request.args.get('filename')
+    session['filename']=filename
     print(f"filename: {filename}")
     if not filename:
         return redirect(url_for('timeslots'))
@@ -196,8 +212,9 @@ def view_timeslots():
         return redirect(url_for('timeslots'))
     config_filename=filename.split('.')[0]+'.config'
     if os.path.isfile(config_filename):
-        with open(config_filename, 'r') as config_file:
-            config_dict = json.load(config_file)
+        #with open(config_filename, 'r') as config_file:
+        config_dict=load_config(config_filename)
+            #config_dict = json.load(config_file)
     wb = load_workbook(filepath)
     sheet_names = wb.sheetnames
     data = {}
@@ -207,6 +224,7 @@ def view_timeslots():
         data[sheet] = df.to_dict('records')
     new_schedule, upcoming_dates = schedule_maintenance(data, config_dict)
     upcoming_dates = list(set(upcoming_dates))
+    session['upcoming_dates']=upcoming_dates
     return render_template('timeslots.html', data=new_schedule, filename=filename, sheet_names=sheet_names, upcoming_dates=upcoming_dates)
 
 
@@ -253,29 +271,52 @@ def update_slots():
 @app.route('/update_slot', methods=['POST'])
 def update_slot():
     filename = request.form['filename']
-    sheet_name = request.form['sheet_name']
     slot_index = int(request.form['slot_index'])
-    custom_server = request.form['custom_server']
-    custom_enddate = request.form.get('custom_enddate_dropdown', request.form.get('custom_enddate'))
-    acknowledgment = request.form.get(f'acknowledgment_{sheet_name}_{slot_index}')
-    notification = request.form.get(f'notification_{sheet_name}_{slot_index}')
+    email = request.form['email']
+    custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
+    acknowledgment = request.form.get(f'acknowledgment_{slot_index}')
+    notification = request.form.get(f'notification_{slot_index}')
 
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
-    ws = wb[sheet_name]
+    ws = wb['Sheet1']  # Adjust sheet name as needed
 
     # Debug print statements
-    print(f'Updating row {slot_index + 2} in sheet {sheet_name}: Server: {custom_server}, End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+    print(f'Updating row {slot_index + 2} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
 
-    ws.cell(row=slot_index + 2, column=1, value=custom_server)
+    # Update the cells (adjust column indices as needed)
     ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
-    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')  # Assuming column 9 for notification
-    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')  # Assuming column 10 for acknowledgment
+    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')
+    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
     return redirect(url_for('view_timeslots', filename=filename))
 
+@app.route('/update_slot_ajax', methods=['POST'])
+def update_slot_ajax():
+    filename = request.form['filename']
+    slot_index = int(request.form['slot_index'])
+    email = request.form['email']
+    custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
+    acknowledgment = request.form.get(f'acknowledgment_{slot_index}')
+    notification = request.form.get(f'notification_{slot_index}')
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    wb = load_workbook(filepath)
+    ws = wb['Sheet1']  # Adjust sheet name as needed
+
+    # Debug print statements
+    print(f'Updating row {slot_index + 2} in sheet: End Date: {custom_enddate}, Notification: {notification}, Acknowledgment: {acknowledgment}')
+
+    # Update the cells (adjust column indices as needed)
+    ws.cell(row=slot_index + 2, column=6, value=custom_enddate)
+    ws.cell(row=slot_index + 2, column=9, value='Yes' if notification else 'No')
+    ws.cell(row=slot_index + 2, column=10, value='Yes' if acknowledgment else 'No')
+
+    wb.save(filepath)
+    flash('Slot updated successfully', 'success')
+    return jsonify({'status': 'success'}) 
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
@@ -316,9 +357,13 @@ def send_reminder():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-@app.route('/server_details/<path:email>', methods=['GET'])
+@app.route('/server_details/<path:email>', methods=['GET', 'POST'])
 def server_details(email):
-    filename = request.args.get('filename')
+    maintname = request.args.get('maintname')
+    print(f"session details: {session}")
+    print(f"session filename: {session.get('filename')}")
+    print(f"session upcoming dates: {session.get('upcoming_dates')}")
+    filename=maintname+".xlsx"
     if not filename:
         flash('Filename is missing', 'danger')
         return redirect(url_for('timeslots'))
