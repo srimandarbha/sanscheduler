@@ -31,9 +31,16 @@
         .navbar {
             background-color: #dc3545;
         }
-        .navbar-brand {
-            color: white;
+        .navbar-nav .nav-link {
+            color: white !important;
         }
+        .navbar-brand {
+            color: white !important;
+        }
+
+        .black-text {
+            color: black;
+          }
         .navbar-brand img {
             width: 30px;
             height: auto;
@@ -44,6 +51,25 @@
             font-size: 1.5rem;
             margin: 0;
         }
+        .navbar-collapse {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          
+          .navbar-nav {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+          }
+          
+          .nav-item {
+            flex: 1;
+          }
+          
+          .nav-link {
+            text-align: center;
+          }
         .footer {
             background-color: #dc3545;
             color: white;
@@ -53,14 +79,36 @@
             width: 100%;
             bottom: 0;
         }
-        .form-control {
-            max-width: 150px; /* Adjust this value as needed */
-        }
+        .form-control[disabled] {
+            width: auto;
+            max-width: 100%;
+            display: inline-block;
+            box-sizing: border-box;
+          }
+
         .email-cell {
             max-width: 200px;
             word-wrap: break-word;
             white-space: normal;
         }
+
+        table {
+            margin-left: auto;
+            margin-right: auto;
+            width: fit-content; /* Optional: set a maximum width */
+        }
+
+        .table th:nth-child(1), .table td:nth-child(1) { /* Adjusts the Server column */
+            width: 150px; /* Adjust the width as needed */
+        }
+
+        .table th:nth-child(5), .table td:nth-child(5) { /* Adjusts the Scheduled Date column */
+            width: 150px; /* Adjust the width as needed */
+        }
+        input[type="checkbox"] {
+            width: 20px; /* Set the width to 20 pixels */
+            height: 20px; /* Set the height to 20 pixels */
+          }
     </style>
 </head>
 <body>
@@ -71,9 +119,9 @@
         </a>
         <div class="collapse navbar-collapse justify-content-center">
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/uploads">Maintenance</a></li>
-                <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/uploads">Maintenance</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/logout">Logout</a></li>
             </ul>
         </div>
     </nav>

@@ -11,7 +11,7 @@
             background-color: #dc3545;
         }
         .navbar-nav .nav-link {
-            color: white;
+            color: white !important;
         }
         .footer {
             background-color: #dc3545;
@@ -21,6 +21,20 @@
         }
         .main-content {
             margin-top: 20px;
+        }
+
+        .table th, .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .table th:nth-child(1), .table td:nth-child(1) { /* Adjusts the Server column */
+            width: 150px; /* Adjust the width as needed */
+        }
+        
+        .table th:nth-child(5), .table td:nth-child(5) { /* Adjusts the Scheduled Date column */
+            width: 150px; /* Adjust the width as needed */
         }
     </style>
     <script>

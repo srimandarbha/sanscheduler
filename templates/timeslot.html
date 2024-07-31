@@ -11,8 +11,13 @@
             background-color: #dc3545;
         }
         .navbar-nav .nav-link {
-            color: white;
+            color: white !important;
         }
+
+        .black-text {
+            color: black;
+          }
+
         .footer {
             background-color: #dc3545;
             color: white;
@@ -34,6 +39,20 @@
             padding: 15px;
             border-radius: 5px;
         }
+
+        .table th, .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .table th:nth-child(1), .table td:nth-child(1) { /* Adjusts the Server column */
+            width: 150px; /* Adjust the width as needed */
+        }
+        
+        .table th:nth-child(5), .table td:nth-child(5) { /* Adjusts the Scheduled Date column */
+            width: 100px; /* Adjust the width as needed */
+        }
     </style>
 </head>
 <body>
@@ -44,10 +63,10 @@
         </a>
         <div class="collapse navbar-collapse justify-content-center">
             <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="/" aria-label="Home page">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/uploads" aria-label="Maintenance schedules">Maintenance</a></li>
-                <li class="nav-item"><a class="nav-link" href="/download_template" aria-label="Download Excel Template">Download Template</a></li>
-                <li class="nav-item"><a class="nav-link" href="/logout" aria-label="Logout">Logout</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/" aria-label="Home page">Home</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/uploads" aria-label="Maintenance schedules">Maintenance</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/download_template" aria-label="Download Excel Template">Download Template</a></li>
+                <li class="nav-item"><a class="nav-link black-text" href="/logout" aria-label="Logout">Logout</a></li>
             </ul>
         </div>
     </nav>
