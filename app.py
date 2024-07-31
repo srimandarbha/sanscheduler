@@ -274,7 +274,7 @@ def update_slot():
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
-    return redirect(url_for('view_server_details', filename=filename))
+    return redirect(url_for('view_timeslots', filename=filename))
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():

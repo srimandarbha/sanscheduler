@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customize Time Slots</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .navbar {
+            background-color: #dc3545;
+        }
+        .navbar-nav .nav-link {
+            color: white;
+        }
+        .footer {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .main-content {
+            margin-top: 20px;
+        }
+    </style>
     <script>
         function enableCustomization(checkbox, sheetName, index) {
             const isChecked = checkbox.checked;
@@ -28,49 +46,78 @@
     </script>
 </head>
 <body>
-    <ul class="nav">
-        <li><a href="/">Home</a></li>
-        <li><a href="/uploads">Maintenance</a></li>
-        <li><a href="/timeslots?filename={{ filename }}">Time Slots</a></li>
-        <li><a href="/logout">logout</a></li>
-    </ul>
-    <h1>Customize Time Slots</h1>
-    <form action="/customize" method="post">
-        <input type="hidden" name="filename" value="{{ filename }}">
-        {% for sheet, time_slots in data.items() %}
-            <h2>Sheet: {{ sheet }}</h2>
-            <input type="checkbox" onclick="selectAll(this, '{{ sheet }}')"> Select All
-            <table>
-                <tr>
-                    <th>Select</th>
-                    <th>Server</th>
-                    <th>Email</th>
-                    <th>Path</th>
-                    <th>Array</th>
-                    <th>Storage</th>
-                    <th>End Date</th>
-                    <th>SNOW Change</th>
-                    <th>Maintenance Name</th>
-                </tr>
-                {% for slot in time_slots %}
-                <tr>
-                    <td><input type="checkbox" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" data-sheet="{{ sheet }}" data-index="{{ loop.index0 }}"></td>
-                    <td><input type="text" name="custom_server_{{ sheet }}[]" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
-                    <td><input type="text" name="custom_email_{{ sheet }}[]" id="email_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['email'] }}" disabled></td>
-                    <td><input type="text" name="custom_path_{{ sheet }}[]" id="path_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['path'] }}" disabled></td>
-                    <td><input type="text" name="custom_array_{{ sheet }}[]" id="array_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['array'] }}" disabled></td>
-                    <td><input type="text" name="custom_storage_{{ sheet }}[]" id="storage_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['storage'] }}" disabled></td>
-                    <td><input type="text" name="custom_enddate_{{ sheet }}[]" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
-                    <td><input type="text" name="custom_snow_change_{{ sheet }}[]" id="snow_change_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['SNOW change'] }}" disabled></td>
-                    <td><input type="text" name="custom_maintenance_name_{{ sheet }}[]" id="maintenance_name_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['maintenance_name'] }}" disabled></td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% endfor %}
-        <input type="submit" value="Save Custom Slots">
-    </form>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">
+            <img src="https://cdn-icons-png.flaticon.com/512/1208/1208913.png" alt="SAN Bridge Logo" width="30" height="30" onclick="location.href='/'>
+            <span>SAN Bridge</span>
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="/" aria-label="Home page">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/uploads" aria-label="Maintenance schedules">Maintenance</a></li>
+                <li class="nav-item"><a class="nav-link" href="/timeslots?filename={{ filename }}" aria-label="Time Slots">Time Slots</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout" aria-label="Logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container main-content">
+        <h1 class="text-center mt-4">Customize Time Slots</h1>
+        <form action="/customize" method="post">
+            <input type="hidden" name="filename" value="{{ filename }}">
+            {% for sheet, time_slots in data.items() %}
+                <h2>Sheet: {{ sheet }}</h2>
+                <div class="form-group">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="select_all_{{ sheet }}" onclick="selectAll(this, '{{ sheet }}')">
+                        <label class="custom-control-label" for="select_all_{{ sheet }}">Select All</label>
+                    </div>
+                </div>
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Select</th>
+                            <th>Server</th>
+                            <th>Email</th>
+                            <th>Path</th>
+                            <th>Array</th>
+                            <th>Storage</th>
+                            <th>End Date</th>
+                            <th>SNOW Change</th>
+                            <th>Maintenance Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in time_slots %}
+                        <tr>
+                            <td>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="custom_check_{{ sheet }}_{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" data-sheet="{{ sheet }}" data-index="{{ loop.index0 }}">
+                                    <label class="custom-control-label" for="custom_check_{{ sheet }}_{{ loop.index0 }}"></label>
+                                </div>
+                            </td>
+                            <td><input type="text" class="form-control" name="custom_server_{{ sheet }}[]" id="server_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['servers'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_email_{{ sheet }}[]" id="email_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['email'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_path_{{ sheet }}[]" id="path_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['path'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_array_{{ sheet }}[]" id="array_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['array'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_storage_{{ sheet }}[]" id="storage_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['storage'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_enddate_{{ sheet }}[]" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_snow_change_{{ sheet }}[]" id="snow_change_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['SNOW change'] }}" disabled></td>
+                            <td><input type="text" class="form-control" name="custom_maintenance_name_{{ sheet }}[]" id="maintenance_name_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['maintenance_name'] }}" disabled></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endfor %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Save Custom Slots</button>
+            </div>
+        </form>
+    </div>
     <footer class="footer">
-        <p></p>
+        <p>&copy; 2024 S.M.S - product of company. All rights reserved.</p>
     </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
