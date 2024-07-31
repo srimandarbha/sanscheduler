@@ -64,7 +64,7 @@
                         <td>{{ slot['array'] }}</td>
                         <td>{{ slot['storage'] }}</td>
                         <td>
-                            <input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled style="display: none;">
+                            <input type="text" name="custom_enddate" id="enddate_{{ sheet }}_{{ loop.index0 }}" value="{{ slot['enddate'] }}" disabled>
                             <select name="custom_enddate_dropdown" id="enddate_dropdown_{{ sheet }}_{{ loop.index0 }}" disabled style="display: none;">
                                 {% for date in upcoming_dates %}
                                     <option value="{{ date }}" {% if slot['enddate'] == date %} selected {% endif %}>{{ date }}</option>
