@@ -325,7 +325,7 @@ def update_slot_ajax():
     # Update the cells (adjust column indices as needed)
     ws.cell(row=row_to_update, column=6, value=custom_enddate)
     ws.cell(row=row_to_update, column=9, value='Yes' if notification else 'No')
-    ws.cell(row=row_to_update, column=10, value='Yes' if acknowledgment else 'No')
+    ws.cell(row=row_to_update, column=10, value='Yes')
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
