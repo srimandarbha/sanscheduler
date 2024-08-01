@@ -1,0 +1,6 @@
+{
+    "reminder_subject": "Maintenance Reminder",
+    "reminder_body": "Dear User,\r\n\r\nThis is a reminder for the maintenance of server {server}.\r\nMaintenance Name: {maintenance_name}\r\nEnd Date: {enddate}\r\nUrl: {url}\r\n\r\nThank you.",
+    "confirmation_subject": "Maintenance Confirmation",
+    "confirmation_body": "Dear User,\r\n\r\nThis is to confirm we received for the maintenance of server {server}.\r\nMaintenance Name: {maintenance_name}\r\nEnd Date: {enddate}\r\nUrl: {url}\r\n\r\nThank you."
+}

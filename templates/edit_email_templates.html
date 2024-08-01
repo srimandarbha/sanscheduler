@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Email Templates</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Edit Email Templates</h1>
+      <form method="post">
+        <div class="form-group">
+          <label for="reminder_subject">Reminder Subject</label>
+          <input type="text" class="form-control" id="reminder_subject" name="reminder_subject" value="{{ templates.reminder_subject }}">
+        </div>
+        <div class="form-group">
+          <label for="reminder_body">Reminder Body</label>
+          <textarea class="form-control" id="reminder_body" name="reminder_body" rows="10">{{ templates.reminder_body }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Templates</button>
+      </form>
+    </div>
+  </body>
+</html>
