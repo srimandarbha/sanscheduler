@@ -372,10 +372,10 @@ def send_reminder():
                 print(message.as_string())
                 
                 try:
-                    with smtplib.SMTP('smtp.example.com', 587) as server:
-                        server.starttls()
-                        server.login('your_email@example.com', 'your_password')
-                        server.sendmail('your_email@example.com', email, message.as_string())
+                    #with smtplib.SMTP('smtp.example.com', 587) as server:
+                    #    server.starttls()
+                    #    server.login('your_email@example.com', 'your_password')
+                    #    server.sendmail('your_email@example.com', email, message.as_string())
                     emails_sent.append(email)
                     
                     # Update the notification column in the spreadsheet
