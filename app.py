@@ -208,7 +208,7 @@ def timeslots():
     filenames = [f for f in filenames if allowed_file(f)]  # Filter only allowed files
     return render_template('timeslot.html', filenames=filenames)
 
-@app.route('/view_timeslots')
+@app.route('/view_timeslots', methods=['GET','POST'])
 def view_timeslots():
     if 'username' not in session:
         flash('Please login to view this page', 'warning')
@@ -352,12 +352,14 @@ def send_reminder():
     emails_sent = []
 
     for sheet in sheet_names:
+        ws = wb[sheet]  # Load the worksheet
         df = pd.read_excel(filepath, sheet_name=sheet)
-        for _, row in df.iterrows():
+        
+        for idx, row in df.iterrows():
             if row['acknowledgment'] == 'Yes':  # Only send to acknowledged slots
                 server = row['servers']
                 email = row['email']
-                url = row.get('url')
+                url = row['url']
                 maintenance_name = row['maintenance_name']
                 enddate = row['enddate']
                 message = MIMEMultipart()
@@ -365,20 +367,26 @@ def send_reminder():
                 message['To'] = email
                 message['Subject'] = 'Maintenance Reminder'
                 
-                
                 body = f'Dear User,\n\nThis is a reminder for the maintenance of server {server}.\nMaintenance Name: {maintenance_name}\nEnd Date: {enddate}\nUrl: {url}\n\nThank you.'
                 message.attach(MIMEText(body, 'plain'))
                 print(message.as_string())
+                
                 try:
                     with smtplib.SMTP('smtp.example.com', 587) as server:
                         server.starttls()
                         server.login('your_email@example.com', 'your_password')
                         server.sendmail('your_email@example.com', email, message.as_string())
                     emails_sent.append(email)
+                    
+                    # Update the notification column in the spreadsheet
+                    notification_cell = ws.cell(row=idx+2, column=9)  # Column index for 'notification' is 9 (10th column)
+                    notification_cell.value = 'Yes'
+                    
                 except Exception as e:
                     print(f'Failed to send email to {email}: {str(e)}')
                     flash(f'Failed to send email to {email}', 'danger')
-    
+
+    wb.save(filepath)
     flash(f'Successfully sent emails to: {", ".join(emails_sent)}', 'success')
     return redirect(url_for('view_timeslots', filename=filename))
 
