@@ -153,10 +153,10 @@
                     <td>{{ data['SNOW change'] }}</td>
                     <td>{{ data['maintenance_name'] }}</td>
                     <td>
-                        <input type="checkbox" name="notification_{{ loop.index0 }}" {{ 'checked' if data.get('notification', False) }}>
+                        <input type="checkbox" name="notification_{{ loop.index0 }}" {% if data.get('notification') == 'Yes' %} checked {% endif %}>
                     </td>
                     <td>
-                        <input type="checkbox" name="acknowledgment_{{ loop.index0 }}" {{ 'checked' if data.get('acknowledgment', False) }}>
+                        <input type="checkbox" name="acknowledgment_{{ loop.index0 }}" {% if data.get('acknowledgment') == 'Yes' %} checked {% endif %}>
                     </td>
                     <td>
                         <button type="button" class="btn btn-warning btn-sm" id="edit_button_{{ loop.index0 }}" onclick="enableEnddateEdit({{ loop.index0 }})">Edit</button>

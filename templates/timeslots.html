@@ -127,7 +127,7 @@
     </nav>
     <div class="container mt-5">
         <h1 class="text-center mb-4">Time Slots</h1>
-        <form action="/send_reminder" method="post" class="mb-3">
+        <form action="/send_reminder" method="post" class="mb-3" id="send-reminder-form">
             <input type="hidden" name="filename" value="{{ filename }}">
             <input type="submit" class="btn btn-danger btn-block" value="Send Reminder Emails">
         </form>
@@ -171,10 +171,10 @@
                             <td>{{ slot['SNOW change'] }}</td>
                             <td>{{ slot['maintenance_name'] }}</td>
                             <td>
-                                <input type="checkbox" name="notification_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('notification', False) }}>
+                                <input type="checkbox" name="notification_{{ sheet }}_{{ loop.index0 }}" {% if slot.get('notification') == 'Yes' %} checked {% endif %}>
                             </td>
                             <td>
-                                <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" {{ 'checked' if slot.get('acknowledgment', False) }}>
+                                <input type="checkbox" name="acknowledgment_{{ sheet }}_{{ loop.index0 }}" {% if slot.get('acknowledgment') == 'Yes' %} checked {% endif %}>
                             </td>
                             <td>
                                 <input type="checkbox" name="customize_{{ sheet }}" data-index="{{ loop.index0 }}" onclick="enableCustomization(this, '{{ sheet }}', {{ loop.index0 }})" {{ 'checked' if slot.get('customize', False) }}>

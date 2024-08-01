@@ -89,7 +89,9 @@ def schedule_maintenance(data, config):
             date_index = server_count // int(server_limit)
             if date_index >= len(schedule_dates):
                 raise ValueError("Index out of range, more servers than available slots.")
-            record['enddate']  = schedule_dates[date_index]
+            if record['enddate'] == '':
+                record['enddate']  = schedule_dates[date_index]
+            print(f"servers: {record['servers']}, enddate: {record['enddate']}, acknowledgment: {record['acknowledgment']}, notification: {record['notification']}")
             flat_schedule_dict[sheet].append(record)
             server_count += 1
     
@@ -213,11 +215,9 @@ def view_timeslots():
         return redirect(url_for('login'))
     filename = request.args.get('filename')
     session['filename']=filename
-    print(f"filename: {filename}")
     if not filename:
         return redirect(url_for('timeslots'))
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    print(f"filepath: {filepath}")
     if not os.path.isfile(filepath):
         flash('File not found', 'danger')
         return redirect(url_for('timeslots'))
@@ -310,9 +310,7 @@ def update_slot_ajax():
     filename = request.form['filename']
     server_name = request.form['server_name']
     email = request.form['email']
-    print(f"request form: {request.form}")
     custom_enddate = request.form.get('enddate_dropdown', request.form.get('enddate'))
-    print(custom_enddate)
     acknowledgment = request.form.get('acknowledgment') == 'true'
     notification = request.form.get('notification') == 'true'
     
@@ -337,7 +335,7 @@ def update_slot_ajax():
     # Update the cells (adjust column indices as needed)
     ws.cell(row=row_to_update, column=6, value=custom_enddate)
     ws.cell(row=row_to_update, column=9, value='Yes' if notification else 'No')
-    ws.cell(row=row_to_update, column=10, value='Yes' if acknowledgment else 'No')
+    ws.cell(row=row_to_update, column=10, value='Yes')
 
     wb.save(filepath)
     flash('Slot updated successfully', 'success')
@@ -349,6 +347,7 @@ def send_reminder():
     filename = request.form['filename']
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     wb = load_workbook(filepath)
+
     sheet_names = wb.sheetnames
     emails_sent = []
 
@@ -358,6 +357,7 @@ def send_reminder():
             if row['acknowledgment'] == 'Yes':  # Only send to acknowledged slots
                 server = row['servers']
                 email = row['email']
+                url = row.get('url')
                 maintenance_name = row['maintenance_name']
                 enddate = row['enddate']
                 message = MIMEMultipart()
@@ -365,7 +365,8 @@ def send_reminder():
                 message['To'] = email
                 message['Subject'] = 'Maintenance Reminder'
                 
-                body = f'Dear User,\n\nThis is a reminder for the maintenance of server {server}.\nMaintenance Name: {maintenance_name}\nEnd Date: {enddate}\n\nThank you.'
+                
+                body = f'Dear User,\n\nThis is a reminder for the maintenance of server {server}.\nMaintenance Name: {maintenance_name}\nEnd Date: {enddate}\nUrl: {url}\n\nThank you.'
                 message.attach(MIMEText(body, 'plain'))
                 print(message.as_string())
                 try:
@@ -379,7 +380,7 @@ def send_reminder():
                     flash(f'Failed to send email to {email}', 'danger')
     
     flash(f'Successfully sent emails to: {", ".join(emails_sent)}', 'success')
-    return redirect(url_for('timeslots', filename=filename))
+    return redirect(url_for('view_timeslots', filename=filename))
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
