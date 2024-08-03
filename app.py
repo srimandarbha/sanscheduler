@@ -205,7 +205,7 @@ def timeslots():
         flash('Please login to view this page', 'warning')
         return redirect(url_for('login'))
     filenames = os.listdir(app.config['UPLOAD_FOLDER'])
-    filenames = [f for f in filenames if allowed_file(f)]  # Filter only allowed files
+    filenames = {f.split('.')[0]: "09/12/2024 23:00:00" for f in filenames if allowed_file(f)}  # Filter only allowed files
     return render_template('timeslot.html', filenames=filenames)
 
 @app.route('/view_timeslots', methods=['GET','POST'])
