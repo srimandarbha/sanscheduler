@@ -341,6 +341,53 @@ def update_slot_ajax():
     flash('Slot updated successfully', 'success')
     return jsonify({'status': 'success'})
 
+def load_email_templates():
+    with open('email_templates.json', 'r') as file:
+        return json.load(file)
+
+def save_email_templates(templates):
+    with open('email_templates.json', 'w') as file:
+        json.dump(templates, file)
+
+@app.route('/email_templates', methods=['GET', 'POST'])
+def email_templates():
+    config_filename = 'email_templates.json'
+    
+    if request.method == 'POST':
+        # Save updated templates
+        templates = {
+            "reminder_subject": request.form['reminder_subject'],
+            "reminder_body": request.form['reminder_body'],
+            "confirmation_subject": request.form['confirmation_subject'],
+            "confirmation_body": request.form['confirmation_body'],
+        }
+        with open(config_filename, 'w') as file:
+            json.dump(templates, file, indent=4)
+        flash('Templates updated successfully!', 'success')
+        return redirect(url_for('email_templates'))
+
+    # Load templates
+    with open(config_filename, 'r') as file:
+        templates = json.load(file)
+
+    return render_template('email_templates.html', templates=templates)
+
+@app.route('/edit_email_templates', methods=['GET', 'POST'])
+def edit_email_templates():
+    if request.method == 'POST':
+        reminder_subject = request.form['reminder_subject']
+        reminder_body = request.form['reminder_body']
+
+        templates = {
+            "reminder_subject": reminder_subject,
+            "reminder_body": reminder_body
+        }
+        save_email_templates(templates)
+        flash('Email templates updated successfully!', 'success')
+        return redirect(url_for('edit_email_templates'))
+    
+    templates = load_email_templates()
+    return render_template('edit_email_templates.html', templates=templates)
 
 @app.route('/send_reminder', methods=['POST'])
 def send_reminder():
@@ -351,6 +398,9 @@ def send_reminder():
     sheet_names = wb.sheetnames
     emails_sent = []
 
+    with open('email_templates.json', 'r') as file:
+        templates = json.load(file)
+        
     for sheet in sheet_names:
         ws = wb[sheet]  # Load the worksheet
         df = pd.read_excel(filepath, sheet_name=sheet)
@@ -360,6 +410,9 @@ def send_reminder():
                 server = row['servers']
                 email = row['email']
                 url = row['url']
+                subject = templates['reminder_subject']
+                body = templates['reminder_body'].format(server=server, maintenance_name=maintenance_name, enddate=enddate, url=url)
+            
                 maintenance_name = row['maintenance_name']
                 enddate = row['enddate']
                 message = MIMEMultipart()
