@@ -1,4 +1,4 @@
-To achieve this behavior, you need to adjust the JavaScript functions to toggle between the input box and the dropdown when the edit button is clicked. Here's the updated code:
+Here is the updated code to ensure that when both the notification and acknowledgment checkboxes are ticked, a "Confirmed" text in green appears, and the edit button is removed:
 
 ```html
 <!doctype html>
@@ -39,30 +39,33 @@ To achieve this behavior, you need to adjust the JavaScript functions to toggle 
         .table th:nth-child(6), .table td:nth-child(6) { /* Adjusts the Scheduled Date column */
             width: 150px; /* Adjust the width as needed */
         }
+
+        .confirmed-text {
+            color: green;
+            font-weight: bold;
+        }
     </style>
     <script>
         function enableEnddateEdit(index) {
-            const enddateInput = document.getElementById(`enddate_${index}`);
             const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
-            const editButton = document.getElementById(`edit_button_${index}`);
             const saveButton = document.getElementById(`save_button_${index}`);
             const cancelButton = document.getElementById(`cancel_button_${index}`);
 
-            enddateInput.style.display = 'none';
             enddateDropdown.style.display = 'inline';
-            editButton.style.display = 'none';
             saveButton.style.display = 'inline';
             cancelButton.style.display = 'inline';
         }
 
         function cancelEdit(index) {
-            const enddateInput = document.getElementById(`enddate_${index}`);
             const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
-            enddateInput.style.display = 'block';
+            const saveButton = document.getElementById(`save_button_${index}`);
+            const cancelButton = document.getElementById(`cancel_button_${index}`);
+            const enddateInput = document.getElementById(`enddate_${index}`);
+
             enddateDropdown.style.display = 'none';
-            document.getElementById(`edit_button_${index}`).style.display = 'inline';
-            document.getElementById(`save_button_${index}`).style.display = 'none';
-            document.getElementById(`cancel_button_${index}`).style.display = 'none';
+            saveButton.style.display = 'none';
+            cancelButton.style.display = 'none';
+            enddateInput.style.display = 'block';
         }
 
         function saveEdit(index, filename) {
@@ -100,11 +103,14 @@ To achieve this behavior, you need to adjust the JavaScript functions to toggle 
             const notification = document.querySelector(`input[name=notification_${index}]`).checked;
             const acknowledgment = document.querySelector(`input[name=acknowledgment_${index}]`).checked;
             const editButton = document.getElementById(`edit_button_${index}`);
+            const confirmedText = document.getElementById(`confirmed_text_${index}`);
 
             if (notification && acknowledgment) {
                 editButton.style.display = 'none';
+                confirmedText.style.display = 'inline';
             } else {
                 editButton.style.display = 'inline';
+                confirmedText.style.display = 'none';
             }
         }
     </script>
@@ -166,6 +172,7 @@ To achieve this behavior, you need to adjust the JavaScript functions to toggle 
                         <button type="button" class="btn btn-warning btn-sm" id="edit_button_{{ loop.index0 }}" onclick="enableEnddateEdit({{ loop.index0 }})" {% if data.get('notification') == 'Yes' and data.get('acknowledgment') == 'Yes' %} style="display:none;" {% endif %}>Edit</button>
                         <button type="button" class="btn btn-success btn-sm" id="save_button_{{ loop.index0 }}" style="display: none;" onclick="saveEdit({{ loop.index0 }}, '{{ filename }}')">Save</button>
                         <button type="button" class="btn btn-secondary btn-sm" id="cancel_button_{{ loop.index0 }}" style="display: none;" onclick="cancelEdit({{ loop.index0 }})">Cancel</button>
+                        <span class="confirmed-text" id="confirmed_text_{{ loop.index0 }}" {% if data.get('notification') != 'Yes' or data.get('acknowledgment') != 'Yes' %} style="display:none;" {% endif %}>Confirmed</span>
                         <input type="hidden" name="server_name_{{ loop.index0 }}" value="{{ data['servers'] }}">
                         <input type="hidden" name="email_{{ loop.index0 }}" value="{{ data['email'] }}">
                     </td>
@@ -184,7 +191,7 @@ To achieve this behavior, you need to adjust the JavaScript functions to toggle 
 </html>
 ```
 
-### Explanation:
-- When the edit button is clicked, the `enableEnddateEdit` function hides the input box and shows the dropdown.
-- The cancel button restores the original view by hiding the dropdown and showing the input box again.
-- The edit button is hidden if both the notification and acknowledgment checkboxes are ticked.
+Changes made:
+1. Added a `span` with the class `confirmed-text` to show the "Confirmed" text in green.
+2. Modified the `checkCheckboxes` function to toggle the visibility of the "Confirmed" text and the edit button.
+3. Updated the template to conditionally show or hide the "Confirmed" text and the edit button based on the values of the checkboxes.
