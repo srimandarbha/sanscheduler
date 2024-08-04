@@ -1,4 +1,4 @@
-Here is the updated code to ensure that when both the notification and acknowledgment checkboxes are ticked, a "Confirmed" text in green appears, and the edit button is removed:
+To ensure that only the drop-down is shown when the edit button is clicked and the input box remains hidden, here is the updated code:
 
 ```html
 <!doctype html>
@@ -47,25 +47,27 @@ Here is the updated code to ensure that when both the notification and acknowled
     </style>
     <script>
         function enableEnddateEdit(index) {
+            const enddateInput = document.getElementById(`enddate_${index}`);
             const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
             const saveButton = document.getElementById(`save_button_${index}`);
             const cancelButton = document.getElementById(`cancel_button_${index}`);
 
+            enddateInput.style.display = 'none';
             enddateDropdown.style.display = 'inline';
             saveButton.style.display = 'inline';
             cancelButton.style.display = 'inline';
         }
 
         function cancelEdit(index) {
+            const enddateInput = document.getElementById(`enddate_${index}`);
             const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
             const saveButton = document.getElementById(`save_button_${index}`);
             const cancelButton = document.getElementById(`cancel_button_${index}`);
-            const enddateInput = document.getElementById(`enddate_${index}`);
 
+            enddateInput.style.display = 'block';
             enddateDropdown.style.display = 'none';
             saveButton.style.display = 'none';
             cancelButton.style.display = 'none';
-            enddateInput.style.display = 'block';
         }
 
         function saveEdit(index, filename) {
@@ -191,7 +193,8 @@ Here is the updated code to ensure that when both the notification and acknowled
 </html>
 ```
 
-Changes made:
-1. Added a `span` with the class `confirmed-text` to show the "Confirmed" text in green.
-2. Modified the `checkCheckboxes` function to toggle the visibility of the "Confirmed" text and the edit button.
-3. Updated the template to conditionally show or hide the "Confirmed" text and the edit button based on the values of the checkboxes.
+In this updated code, the following changes were made:
+
+1. Modified the `enableEnddateEdit` function to hide the input field and show the drop-down only when the edit button is clicked.
+2. Modified the `cancelEdit` function to hide the drop-down and show the input field when the cancel button is clicked.
+3. The `checkCheckboxes` function is used to
