@@ -1,10 +1,4 @@
-To address the requirements:
-
-1. Avoid showing two input boxes (text input and dropdown) during editing.
-2. Disable the edit functionality if both notification and acknowledgment checkboxes are ticked.
-3. Remove the edit option if both checkboxes are ticked.
-
-Here’s the updated HTML and JavaScript:
+To achieve this behavior, you need to adjust the JavaScript functions to toggle between the input box and the dropdown when the edit button is clicked. Here's the updated code:
 
 ```html
 <!doctype html>
@@ -49,26 +43,30 @@ Here’s the updated HTML and JavaScript:
     <script>
         function enableEnddateEdit(index) {
             const enddateInput = document.getElementById(`enddate_${index}`);
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
             const editButton = document.getElementById(`edit_button_${index}`);
             const saveButton = document.getElementById(`save_button_${index}`);
             const cancelButton = document.getElementById(`cancel_button_${index}`);
 
-            enddateInput.disabled = !enddateInput.disabled;
-            editButton.style.display = enddateInput.disabled ? 'inline' : 'none';
-            saveButton.style.display = enddateInput.disabled ? 'none' : 'inline';
-            cancelButton.style.display = enddateInput.disabled ? 'none' : 'inline';
+            enddateInput.style.display = 'none';
+            enddateDropdown.style.display = 'inline';
+            editButton.style.display = 'none';
+            saveButton.style.display = 'inline';
+            cancelButton.style.display = 'inline';
         }
 
         function cancelEdit(index) {
             const enddateInput = document.getElementById(`enddate_${index}`);
-            enddateInput.disabled = true;
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
+            enddateInput.style.display = 'block';
+            enddateDropdown.style.display = 'none';
             document.getElementById(`edit_button_${index}`).style.display = 'inline';
             document.getElementById(`save_button_${index}`).style.display = 'none';
             document.getElementById(`cancel_button_${index}`).style.display = 'none';
         }
 
         function saveEdit(index, filename) {
-            const enddateInput = document.getElementById(`enddate_${index}`);
+            const enddateDropdown = document.getElementById(`enddate_dropdown_${index}`);
             const notification = document.querySelector(`input[name=notification_${index}]`).checked;
             const acknowledgment = document.querySelector(`input[name=acknowledgment_${index}]`).checked;
             const email = document.querySelector(`input[name=email_${index}]`).value;
@@ -80,7 +78,7 @@ Here’s the updated HTML and JavaScript:
                 data: {
                     filename: filename,
                     server_name: serverName,
-                    enddate: enddateInput.value,
+                    enddate: enddateDropdown.value,
                     notification: notification,
                     acknowledgment: acknowledgment,
                     email: email
@@ -89,7 +87,6 @@ Here’s the updated HTML and JavaScript:
                     if (response.status === 'success') {
                         console.log('Slot updated successfully');
                         window.location.reload();
-                        cancelEdit(index);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -151,6 +148,11 @@ Here’s the updated HTML and JavaScript:
                     <td>{{ data['storage'] }}</td>
                     <td>
                         <input type="text" name="enddate" id="enddate_{{ loop.index0 }}" value="{{ data['enddate'] }}" class="form-control" disabled>
+                        <select class="form-control" name="enddate_dropdown" id="enddate_dropdown_{{ loop.index0 }}" style="display: none;">
+                            {% for date in upcoming_maintenance_dates %}
+                                <option value="{{ date }}" {% if data['enddate'] == date %} selected {% endif %}>{{ date }}</option>
+                            {% endfor %}
+                        </select>
                     </td>
                     <td>{{ data['SNOW change'] }}</td>
                     <td>{{ data['maintenance_name'] }}</td>
@@ -183,14 +185,6 @@ Here’s the updated HTML and JavaScript:
 ```
 
 ### Explanation:
-
-1. **Avoid Two Input Boxes:**
-   - Removed the dropdown for selecting dates and only retained the input box.
-   
-2. **Disable Edit Functionality if Both Checkboxes are Ticked:**
-   - Added a function `checkCheckboxes(index)` to check the state of both checkboxes and hide the edit button if both are ticked.
-
-3. **Remove Edit Option if Both Checkboxes are Ticked:**
-   - The `enableEnddateEdit` function now also considers the state of both checkboxes.
-
-This updated code ensures that if both notification and acknowledgment are ticked, the edit option will not be shown.
+- When the edit button is clicked, the `enableEnddateEdit` function hides the input box and shows the dropdown.
+- The cancel button restores the original view by hiding the dropdown and showing the input box again.
+- The edit button is hidden if both the notification and acknowledgment checkboxes are ticked.
